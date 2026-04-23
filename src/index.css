@@ -70,7 +70,12 @@ a {
   color: var(--accent);
   text-decoration: none;
 }
-a:hover { text-decoration: underline; }
+a:hover { color: var(--accent-2); }
+
+/* Kill underlines everywhere by default (matches the liquid-glass aesthetic). */
+button, a, .back-link, .sim-card-link {
+  text-decoration: none !important;
+}
 
 /* ====== Liquid glass primitives ======
    `.glass`        = translucent card without backdrop blur (cheap; safe to

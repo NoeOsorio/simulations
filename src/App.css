@@ -12,7 +12,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 24px;
-  background: rgba(10, 15, 28, 0.82);
+  background: rgba(10, 15, 28, 0.55);
+  backdrop-filter: saturate(160%) blur(10px);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -56,6 +58,25 @@
   letter-spacing: 0.5px;
   color: var(--text-dim);
   margin-bottom: 16px;
-  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  width: fit-content;
 }
-.back-link:hover { color: var(--text); }
+.back-link:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(-2px);
+}
+
+/* Keyboard focus ring — accessible without underlines. */
+:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.85);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+a:focus-visible,
+button:focus-visible,
+.sim-card-link:focus-visible {
+  outline-offset: 4px;
+}

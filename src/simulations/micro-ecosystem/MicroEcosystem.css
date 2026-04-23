@@ -137,7 +137,10 @@
 .event-line {
   font-size: 11px;
   color: var(--text-dim);
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 3px 2px;
   font-family: var(--font-mono);
+  line-height: 1.45;
+}
+.event-line + .event-line {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }

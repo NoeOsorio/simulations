@@ -601,7 +601,7 @@ export default function MicroEcosystem() {
             <h3 className="side-title">Events</h3>
             <div className="events-scroll">
               {log.slice(0, 30).map((l, i) => (
-                <div key={i} className="event-line" style={{ opacity: 1 - i * 0.025 }}>
+                <div key={i} className="event-line" style={{ opacity: Math.max(0.55, 1 - i * 0.012) }}>
                   {l.msg}
                 </div>
               ))}

@@ -62,12 +62,19 @@
 }
 
 .sim-card-link {
-  text-decoration: none;
   color: inherit;
   display: block;
-  transition: transform 0.18s ease;
+  transition: transform 0.22s ease;
 }
 .sim-card-link:hover { transform: translateY(-3px); }
+.sim-card-link:hover .sim-card {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 30px 70px -20px rgba(124, 58, 237, 0.35),
+    0 8px 24px -12px rgba(0, 0, 0, 0.45);
+}
 .sim-card-link:hover .sim-cta {
   background: linear-gradient(135deg, rgba(96, 165, 250, 0.6), rgba(167, 139, 250, 0.6));
   border-color: rgba(167, 139, 250, 0.7);
@@ -75,6 +82,10 @@
 
 .sim-card-disabled { cursor: not-allowed; opacity: 0.55; }
 .sim-card-disabled:hover { transform: none; }
+.sim-card-disabled:hover .sim-card {
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
 
 .sim-card {
   display: flex;
@@ -82,6 +93,7 @@
   gap: 10px;
   padding: 22px 22px 20px;
   height: 100%;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .sim-card-head {
