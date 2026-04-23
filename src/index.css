@@ -1,0 +1,160 @@
+/* Sim World — apple liquid glass base styles */
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, Consolas, monospace;
+
+  --text: #e6ecff;
+  --text-dim: #94a3b8;
+  --text-faint: #64748b;
+  --accent: #60a5fa;
+  --accent-2: #a78bfa;
+  --accent-3: #f472b6;
+
+  --bg-0: #0a0f1c;
+  --bg-1: #111827;
+  --bg-2: #0a1628;
+
+  /* Liquid glass tokens */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-strong: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.22);
+  --glass-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 24px 60px -20px rgba(0, 0, 0, 0.55),
+    0 8px 24px -12px rgba(0, 0, 0, 0.4);
+  --glass-blur: saturate(180%) blur(22px);
+
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  color: var(--text);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100svh;
+}
+
+body {
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(96, 165, 250, 0.32), transparent 60%),
+    radial-gradient(800px 600px at 110% 0%, rgba(167, 139, 250, 0.28), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(244, 114, 182, 0.22), transparent 60%),
+    linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* ====== Liquid glass primitives ====== */
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+
+/* specular highlight on the top edge */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 35%);
+  border-radius: inherit;
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+}
+
+/* ====== Buttons ====== */
+.glass-btn {
+  appearance: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 9px 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 6px 18px -6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+.glass-btn:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.06);
+}
+.glass-btn[data-variant="accent"] {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.45), rgba(167, 139, 250, 0.45));
+  border-color: rgba(167, 139, 250, 0.55);
+}
+.glass-btn[data-variant="accent"]:hover {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.6), rgba(167, 139, 250, 0.6));
+}
+.glass-btn[data-variant="danger"] {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.35), rgba(244, 114, 182, 0.35));
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+/* ====== Headings ====== */
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ====== Scrollbars ====== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* ====== Utility ====== */
+.muted { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+.mono  { font-family: var(--font-mono); }

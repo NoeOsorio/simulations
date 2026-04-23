@@ -1,0 +1,146 @@
+.menu-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ---------- Hero ---------- */
+.menu-hero {
+  padding: 40px 36px;
+  background:
+    radial-gradient(600px 220px at 0% 0%, rgba(96, 165, 250, 0.18), transparent 60%),
+    radial-gradient(600px 220px at 100% 100%, rgba(244, 114, 182, 0.16), transparent 60%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.menu-hero-inner {
+  max-width: 780px;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 22px;
+}
+
+.menu-title {
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.04;
+  margin: 0 0 16px;
+}
+
+.menu-sub {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 620px;
+  margin: 0;
+}
+
+/* ---------- Section title ---------- */
+.section-title {
+  font-size: 13px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+/* ---------- Sim grid ---------- */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.sim-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.18s ease;
+}
+.sim-card-link:hover { transform: translateY(-3px); }
+.sim-card-link:hover .sim-cta {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.6), rgba(167, 139, 250, 0.6));
+  border-color: rgba(167, 139, 250, 0.7);
+}
+
+.sim-card-disabled { cursor: not-allowed; opacity: 0.55; }
+.sim-card-disabled:hover { transform: none; }
+
+.sim-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 22px 20px;
+  height: 100%;
+}
+
+.sim-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sim-icon {
+  font-size: 30px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(167, 139, 250, 0.35));
+}
+
+.sim-status {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+}
+.sim-status-available {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.08);
+}
+.sim-status-planned {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sim-phase {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--accent-2);
+}
+
+.sim-title {
+  font-size: 22px;
+  margin-top: 2px;
+}
+
+.sim-tagline {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+.sim-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.sim-cta {
+  margin-top: auto;
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 8px 14px;
+}

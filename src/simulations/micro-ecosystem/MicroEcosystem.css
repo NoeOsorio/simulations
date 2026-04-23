@@ -1,0 +1,143 @@
+.sim-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sim-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sim-h1 {
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.02em;
+  margin: 8px 0 4px;
+}
+
+.sim-tag {
+  font-size: 13px;
+  margin: 0;
+}
+
+.sim-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .sim-layout { grid-template-columns: 1fr; }
+}
+
+/* ---------- Canvas ---------- */
+.sim-canvas-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.canvas-wrap {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sim-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #0a1628;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.control-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+/* ---------- Side panel ---------- */
+.sim-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.side-card {
+  padding: 16px 16px 14px;
+}
+
+.side-title {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.stat-label { color: var(--text); }
+.stat-value { font-weight: 700; font-size: 16px; }
+
+.selected-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.selected-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+}
+.row-k { color: var(--text-dim); }
+.row-v { color: var(--text); font-family: var(--font-mono); }
+
+.events-card {
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.events-scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+.event-line {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-family: var(--font-mono);
+}
