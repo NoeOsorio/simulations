@@ -362,25 +362,30 @@ export default function MicroEcosystem() {
       ctx.restore();
     };
 
+    // Pre-render the static background (gradient + dot grid) once to an
+    // offscreen canvas so each frame only needs a single drawImage call.
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = CANVAS_W;
+    bgCanvas.height = CANVAS_H;
+    const bgCtx = bgCanvas.getContext('2d')!;
+    const bgGrad = bgCtx.createLinearGradient(0, 0, 0, CANVAS_H);
+    bgGrad.addColorStop(0, '#0a1628');
+    bgGrad.addColorStop(0.5, '#0f2035');
+    bgGrad.addColorStop(1, '#0a1a2e');
+    bgCtx.fillStyle = bgGrad;
+    bgCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    bgCtx.fillStyle = 'rgba(100,180,255,0.06)';
+    for (let x = 20; x < CANVAS_W; x += 30) {
+      for (let y = 20; y < CANVAS_H; y += 30) {
+        bgCtx.beginPath();
+        bgCtx.arc(x, y, 1, 0, Math.PI * 2);
+        bgCtx.fill();
+      }
+    }
+
     const render = () => {
       const tick = tickRef.current;
-      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-      const bg = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-      bg.addColorStop(0, '#0a1628');
-      bg.addColorStop(0.5, '#0f2035');
-      bg.addColorStop(1, '#0a1a2e');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-      ctx.fillStyle = 'rgba(100,180,255,0.06)';
-      for (let x = 20; x < CANVAS_W; x += 30) {
-        for (let y = 20; y < CANVAS_H; y += 30) {
-          ctx.beginPath();
-          ctx.arc(x, y, 1, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+      ctx.drawImage(bgCanvas, 0, 0);
 
       for (let i = 0; i < 15; i++) {
         const px = (tick * 0.2 + i * 97) % CANVAS_W;
@@ -407,7 +412,6 @@ export default function MicroEcosystem() {
           if (found) setSelected({ ...found });
           else { setSelected(null); selectedRef.current = null; }
         }
-        setLog([...logRef.current.slice(0, 30)]);
       }
     };
 
@@ -554,7 +558,7 @@ export default function MicroEcosystem() {
         </div>
 
         <aside className="sim-side">
-          <section className="glass side-card">
+          <section className="glass glass-blur side-card">
             <h3 className="side-title">Statistics</h3>
             <StatRow icon="🐾" label="Alive" value={stats.alive} color="#60a5fa" />
             <StatRow icon="🌿" label="Food" value={stats.food} color="#34d399" />
@@ -565,7 +569,7 @@ export default function MicroEcosystem() {
 
           {selected && (
             <section
-              className="glass side-card"
+              className="glass glass-blur side-card"
               style={{ borderColor: `hsla(${selected.hue},60%,55%,0.5)` }}
             >
               <div className="selected-name" style={{ color: hueToRgb(selected.hue) }}>
@@ -593,7 +597,7 @@ export default function MicroEcosystem() {
             </section>
           )}
 
-          <section className="glass side-card events-card">
+          <section className="glass glass-blur side-card events-card">
             <h3 className="side-title">Events</h3>
             <div className="events-scroll">
               {log.slice(0, 30).map((l, i) => (

@@ -25,7 +25,7 @@
     0 -1px 0 rgba(0, 0, 0, 0.25) inset,
     0 24px 60px -20px rgba(0, 0, 0, 0.55),
     0 8px 24px -12px rgba(0, 0, 0, 0.4);
-  --glass-blur: saturate(180%) blur(22px);
+  --glass-blur: saturate(160%) blur(12px);
 
   color-scheme: dark;
   font-family: var(--font-sans);
@@ -47,13 +47,23 @@ html, body, #root {
 }
 
 body {
+  background: var(--bg-0);
+  overflow-x: hidden;
+}
+
+/* Ambient gradient sits in its own fixed, static layer so it doesn't repaint
+   when content scrolls or the canvas animates. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(900px 600px at 12% -10%, rgba(96, 165, 250, 0.32), transparent 60%),
     radial-gradient(800px 600px at 110% 0%, rgba(167, 139, 250, 0.28), transparent 60%),
     radial-gradient(700px 500px at 50% 110%, rgba(244, 114, 182, 0.22), transparent 60%),
     linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-2) 100%);
-  background-attachment: fixed;
-  overflow-x: hidden;
 }
 
 a {
@@ -62,16 +72,26 @@ a {
 }
 a:hover { text-decoration: underline; }
 
-/* ====== Liquid glass primitives ====== */
+/* ====== Liquid glass primitives ======
+   `.glass`        = translucent card without backdrop blur (cheap; safe to
+                     wrap around an animated canvas).
+   `.glass-blur`   = opt-in blur, use on cards over the ambient gradient
+                     where the blur actually shows. */
 .glass {
   position: relative;
-  background: var(--glass-bg);
+  background: rgba(20, 26, 48, 0.55);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
   overflow: hidden;
+  /* Isolate paint so animated children don't invalidate the page. */
+  contain: layout paint;
+}
+
+.glass-blur {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 /* specular highlight on the top edge */
@@ -102,8 +122,6 @@ a:hover { text-decoration: underline; }
   border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 9px 16px;
   border-radius: 12px;
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.18) inset,
     0 6px 18px -6px rgba(0, 0, 0, 0.4);

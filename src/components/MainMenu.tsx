@@ -5,7 +5,7 @@ import './MainMenu.css';
 export default function MainMenu() {
   return (
     <div className="menu-wrap">
-      <section className="menu-hero glass">
+      <section className="menu-hero glass glass-blur">
         <div className="menu-hero-inner">
           <span className="eyebrow mono">a phased simulation of life</span>
           <h1 className="menu-title">
@@ -33,7 +33,7 @@ export default function MainMenu() {
 
 function SimCard({ sim }: { sim: typeof simulations[number] }) {
   const inner = (
-    <article className="sim-card glass">
+    <article className="sim-card glass glass-blur">
       <div className="sim-card-head">
         <span className="sim-icon" aria-hidden>{sim.icon}</span>
         <span className={`sim-status sim-status-${sim.status}`}>
@@ -57,7 +57,7 @@ function SimCard({ sim }: { sim: typeof simulations[number] }) {
 
 function ComingSoonCard() {
   return (
-    <article className="sim-card glass sim-card-disabled">
+    <article className="sim-card glass glass-blur sim-card-disabled">
       <div className="sim-card-head">
         <span className="sim-icon" aria-hidden>✨</span>
         <span className="sim-status sim-status-planned">soon</span>
