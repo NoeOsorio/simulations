@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   CANVAS_H,
   CANVAS_W,
@@ -30,6 +29,42 @@ import {
 } from '../../lib/persistence';
 import './MicroEcosystem.css';
 
+type EventKind = 'eat' | 'born' | 'die' | 'seek' | 'mate' | 'sys';
+
+interface SimLogEntry extends LogEntry {
+  tick: number;
+  kind: EventKind;
+  icon: string;
+  text: string;
+}
+
+const EVENT_COLORS: Record<EventKind, string> = {
+  eat: 'var(--lime)',
+  born: 'var(--lime)',
+  die: 'var(--red)',
+  seek: 'var(--amber)',
+  mate: 'var(--magenta)',
+  sys: 'var(--cyan)',
+};
+
+function stateLabel(s: Creature['state']): string {
+  switch (s) {
+    case 'seek': return 'Seeking';
+    case 'reproduce': return 'Reproducing';
+    case 'eat': return 'Eating';
+    default: return 'Wandering';
+  }
+}
+
+function stateColor(s: Creature['state']): string {
+  switch (s) {
+    case 'seek': return 'var(--amber)';
+    case 'reproduce': return 'var(--magenta)';
+    case 'eat': return 'var(--lime)';
+    default: return 'var(--text-1)';
+  }
+}
+
 export default function MicroEcosystem() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const creaturesRef = useRef<Creature[]>([]);
@@ -40,6 +75,7 @@ export default function MicroEcosystem() {
 
   const [running, setRunning] = useState(true);
   const [speed, setSpeed] = useState(1);
+  const [displayTick, setDisplayTick] = useState(0);
   const [stats, setStats] = useState<SimStats>({
     alive: INITIAL_CREATURES,
     food: INITIAL_FOOD,
@@ -48,17 +84,28 @@ export default function MicroEcosystem() {
     totalEaten: 0,
   });
   const [selected, setSelected] = useState<Creature | null>(null);
-  const [log, setLog] = useState<LogEntry[]>([]);
+  const [log, setLog] = useState<SimLogEntry[]>([]);
 
   const selectedRef = useRef<Creature | null>(null);
-  const logRef = useRef<LogEntry[]>([]);
+  const logRef = useRef<SimLogEntry[]>([]);
   const runningRef = useRef(true);
   const speedRef = useRef(1);
 
-  const addLog = useCallback((msg: string) => {
-    logRef.current = [{ msg, t: Date.now() }, ...logRef.current].slice(0, 500);
-    setLog([...logRef.current.slice(0, 30)]);
-  }, []);
+  const addLog = useCallback(
+    (msg: string, kind: EventKind = 'sys', icon = '●') => {
+      const entry: SimLogEntry = {
+        t: Date.now(),
+        tick: tickRef.current,
+        kind,
+        icon,
+        text: msg,
+        msg,
+      };
+      logRef.current = [entry, ...logRef.current].slice(0, 500);
+      setLog([...logRef.current.slice(0, 30)]);
+    },
+    []
+  );
 
   // ----- Init -----
   useEffect(() => {
@@ -70,8 +117,8 @@ export default function MicroEcosystem() {
     for (let i = 0; i < INITIAL_FOOD; i++) food.push(createFood());
     foodRef.current = food;
 
-    addLog('🌍 Ecosystem created');
-    addLog(`🐾 ${INITIAL_CREATURES} creatures have appeared`);
+    addLog('Ecosystem created', 'sys', '◆');
+    addLog(`${INITIAL_CREATURES} creatures have appeared`, 'sys', '●');
   }, [addLog]);
 
   // ----- Game loop -----
@@ -143,7 +190,7 @@ export default function MicroEcosystem() {
               partner.children++;
               newCreatures.push(baby);
               statsRef.current.born++;
-              addLog(`🐣 ${baby.name} was born (gen ${baby.generation})`);
+              addLog(`${baby.name} was born (gen ${baby.generation})`, 'born', '+');
             }
           } else {
             c.state = 'wander';
@@ -182,7 +229,7 @@ export default function MicroEcosystem() {
         creaturesRef.current = creatures.filter((c) => {
           if (c.energy <= 0) {
             statsRef.current.died++;
-            addLog(`💀 ${c.name} has died (age: ${Math.floor(c.age / 60)}s)`);
+            addLog(`${c.name} has died (age: ${Math.floor(c.age / 60)}s)`, 'die', '×');
             if (selectedRef.current?.id === c.id) {
               setSelected(null);
               selectedRef.current = null;
@@ -362,26 +409,72 @@ export default function MicroEcosystem() {
       ctx.restore();
     };
 
-    // Pre-render the static background (gradient + dot grid) once to an
+    // Pre-render the static background (radial fill + HUD grid) once to an
     // offscreen canvas so each frame only needs a single drawImage call.
     const bgCanvas = document.createElement('canvas');
     bgCanvas.width = CANVAS_W;
     bgCanvas.height = CANVAS_H;
     const bgCtx = bgCanvas.getContext('2d')!;
-    const bgGrad = bgCtx.createLinearGradient(0, 0, 0, CANVAS_H);
-    bgGrad.addColorStop(0, '#0a1628');
-    bgGrad.addColorStop(0.5, '#0f2035');
-    bgGrad.addColorStop(1, '#0a1a2e');
+
+    // Radial dark fill — matches the SimScreen viewport backdrop.
+    const bgGrad = bgCtx.createRadialGradient(
+      CANVAS_W / 2,
+      CANVAS_H / 2,
+      0,
+      CANVAS_W / 2,
+      CANVAS_H / 2,
+      Math.max(CANVAS_W, CANVAS_H) * 0.8
+    );
+    bgGrad.addColorStop(0, '#0c1420');
+    bgGrad.addColorStop(1, '#05070a');
     bgCtx.fillStyle = bgGrad;
     bgCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    bgCtx.fillStyle = 'rgba(100,180,255,0.06)';
-    for (let x = 20; x < CANVAS_W; x += 30) {
-      for (let y = 20; y < CANVAS_H; y += 30) {
-        bgCtx.beginPath();
-        bgCtx.arc(x, y, 1, 0, Math.PI * 2);
-        bgCtx.fill();
-      }
+
+    // 40px cyan grid
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.06)';
+    bgCtx.lineWidth = 1;
+    for (let x = 0; x < CANVAS_W; x += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
     }
+    for (let y = 0; y < CANVAS_H; y += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
+    }
+    // Stronger 200px major grid
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.12)';
+    for (let x = 0; x < CANVAS_W; x += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
+    }
+    for (let y = 0; y < CANVAS_H; y += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
+    }
+
+    const drawCornerTicks = () => {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+      ctx.lineWidth = 1;
+      const tl = 10;
+      // TL
+      ctx.beginPath(); ctx.moveTo(0, tl); ctx.lineTo(0, 0); ctx.lineTo(tl, 0); ctx.stroke();
+      // TR
+      ctx.beginPath(); ctx.moveTo(CANVAS_W - tl, 0); ctx.lineTo(CANVAS_W, 0); ctx.lineTo(CANVAS_W, tl); ctx.stroke();
+      // BL
+      ctx.beginPath(); ctx.moveTo(0, CANVAS_H - tl); ctx.lineTo(0, CANVAS_H); ctx.lineTo(tl, CANVAS_H); ctx.stroke();
+      // BR
+      ctx.beginPath(); ctx.moveTo(CANVAS_W - tl, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H - tl); ctx.stroke();
+      ctx.restore();
+    };
 
     const render = () => {
       const tick = tickRef.current;
@@ -392,14 +485,17 @@ export default function MicroEcosystem() {
         const py = ((Math.sin(tick * 0.01 + i) * 50 + i * 37) % CANVAS_H + CANVAS_H) % CANVAS_H;
         ctx.beginPath();
         ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(100,200,255,${0.05 + Math.sin(tick * 0.03 + i) * 0.03})`;
+        ctx.fillStyle = `rgba(0,229,255,${0.05 + Math.sin(tick * 0.03 + i) * 0.03})`;
         ctx.fill();
       }
 
       for (const f of foodRef.current) drawFood(f, tick);
       for (const c of creaturesRef.current) drawCreature(c, tick);
 
+      drawCornerTicks();
+
       if (tick % 30 === 0) {
+        setDisplayTick(tick);
         setStats({
           alive: creaturesRef.current.length,
           food: foodRef.current.length,
@@ -451,12 +547,12 @@ export default function MicroEcosystem() {
   const addCreature = () => {
     const c = createCreature();
     creaturesRef.current.push(c);
-    addLog(`🐾 ${c.name} was created manually`);
+    addLog(`${c.name} was created manually`, 'sys', '+');
   };
 
   const addFoodBurst = () => {
     for (let i = 0; i < 10; i++) foodRef.current.push(createFood());
-    addLog('🌿 Food rain!');
+    addLog('Food rain triggered', 'sys', '✦');
   };
 
   const toggleRunning = () => {
@@ -489,7 +585,7 @@ export default function MicroEcosystem() {
       `sim-microecosystem-state-${timestamp()}.txt`,
       stateToText('micro-ecosystem', state)
     );
-    addLog('💾 State exported to file');
+    addLog('State exported to file', 'sys', '◼');
   };
 
   const loadState = async () => {
@@ -506,139 +602,343 @@ export default function MicroEcosystem() {
       statsRef.current = { ...state.stats };
       setSelected(null);
       selectedRef.current = null;
-      addLog(`📥 Loaded state with ${state.creatures.length} creatures, ${state.food.length} food`);
+      addLog(
+        `Loaded state with ${state.creatures.length} creatures, ${state.food.length} food`,
+        'sys',
+        '◻'
+      );
       runningRef.current = wasRunning;
       setRunning(wasRunning);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      addLog(`⚠️ Failed to load state: ${msg}`);
+      addLog(`Failed to load state: ${msg}`, 'sys', '!');
     }
   };
 
+  const speedLabel = running ? `${speed.toFixed(1)}×` : 'PAUSED';
+
   return (
-    <div className="sim-page">
-      <Link to="/" className="back-link">← Back to menu</Link>
-
-      <header className="sim-header">
-        <div>
-          <span className="eyebrow mono">Phase 01</span>
-          <h1 className="sim-h1">
-            Micro <span className="gradient-text">Ecosystem</span>
-          </h1>
-          <p className="muted sim-tag">
-            Artificial life simulation · click a creature to inspect it.
-          </p>
-        </div>
-      </header>
-
-      <div className="sim-layout">
-        <div className="sim-canvas-col">
-          <div className="canvas-wrap glass">
-            <canvas
-              ref={canvasRef}
-              width={CANVAS_W}
-              height={CANVAS_H}
-              onClick={handleCanvasClick}
-              className="sim-canvas"
-            />
+    <div className="sim-screen">
+      <main className="sim-screen__main">
+        {/* Title block */}
+        <div className="sim-title">
+          <div>
+            <div className="tick sim-title__eyebrow">▌ PHASE 01 · MICRO ECOSYSTEM</div>
+            <h2 className="sim-title__h2">
+              Micro <span className="sim-title__accent">Ecosystem</span>
+            </h2>
+            <p className="sim-title__sub">
+              Tiny creatures wander, eat, and reproduce. Click a creature to inspect it.
+            </p>
           </div>
-
-          <div className="control-row">
-            <button className="glass-btn" onClick={toggleRunning} data-variant={running ? undefined : 'accent'}>
-              {running ? '⏸ Pause' : '▶ Resume'}
-            </button>
-            <button className="glass-btn" onClick={changeSpeed}>⚡ ×{speed}</button>
-            <button className="glass-btn" onClick={addCreature}>🐾 + Creature</button>
-            <button className="glass-btn" onClick={addFoodBurst}>🌿 + Food</button>
-            <span className="control-spacer" />
-            <button className="glass-btn" onClick={exportLogs}>📝 Export logs</button>
-            <button className="glass-btn" onClick={saveState}>💾 Save state</button>
-            <button className="glass-btn" onClick={loadState}>📥 Load state</button>
-          </div>
-        </div>
-
-        <aside className="sim-side">
-          <section className="glass glass-blur side-card">
-            <h3 className="side-title">Statistics</h3>
-            <StatRow icon="🐾" label="Alive" value={stats.alive} color="#60a5fa" />
-            <StatRow icon="🌿" label="Food" value={stats.food} color="#34d399" />
-            <StatRow icon="🐣" label="Births" value={stats.born} color="#f472b6" />
-            <StatRow icon="💀" label="Deaths" value={stats.died} color="#f87171" />
-            <StatRow icon="🍽" label="Meals" value={stats.totalEaten} color="#fbbf24" last />
-          </section>
-
-          {selected && (
-            <section
-              className="glass glass-blur side-card"
-              style={{ borderColor: `hsla(${selected.hue},60%,55%,0.5)` }}
+          <div className="sim-title__rate">
+            <div className="tick sim-title__rate-label">Tick rate</div>
+            <div
+              className={`sim-title__rate-value ${
+                running ? 'sim-title__rate-value--running' : 'sim-title__rate-value--paused'
+              }`}
             >
-              <div className="selected-name" style={{ color: hueToRgb(selected.hue) }}>
-                {selected.name}
-              </div>
-              <div className="selected-stats">
-                <Row k="Energy" v={
-                  <span style={{ color: selected.energy > 40 ? '#34d399' : '#f87171' }}>
-                    {Math.round(selected.energy)}
-                  </span>
-                } />
-                <Row k="Speed" v={selected.speed.toFixed(2)} />
-                <Row k="Generation" v={selected.generation} />
-                <Row k="Children" v={selected.children} />
-                <Row k="Age" v={`${Math.floor(selected.age / 60)}s`} />
-                <Row k="State" v={
-                  <span style={{
-                    color:
-                      selected.state === 'seek' ? '#f87171' :
-                      selected.state === 'reproduce' ? '#f472b6' :
-                      selected.state === 'eat' ? '#34d399' : '#94a3b8'
-                  }}>{stateLabel(selected.state)}</span>
-                } />
-              </div>
-            </section>
-          )}
-
-          <section className="glass glass-blur side-card events-card">
-            <h3 className="side-title">Events</h3>
-            <div className="events-scroll">
-              {log.slice(0, 30).map((l, i) => (
-                <div key={i} className="event-line" style={{ opacity: Math.max(0.55, 1 - i * 0.012) }}>
-                  {l.msg}
-                </div>
-              ))}
-              {log.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No events yet.</div>}
+              {speedLabel}
             </div>
-          </section>
-        </aside>
+          </div>
+        </div>
+
+        {/* Viewport frame */}
+        <div className="hud brackets sim-viewport">
+          <span className="bk-tr" />
+          <span className="bk-bl" />
+          <div className="hud__header">
+            <div className="sim-viewport__head-left">
+              <span className="dot" />
+              <span>Live Viewport</span>
+              <span className="sim-viewport__code">· VPT-01</span>
+            </div>
+            <div className="sim-viewport__head-right">
+              <span>GRID 40px</span>
+              <span className="sim-viewport__rec">● REC</span>
+            </div>
+          </div>
+          <div className="sim-viewport__stage">
+            <div className="sim-viewport__canvas-wrap">
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_W}
+                height={CANVAS_H}
+                onClick={handleCanvasClick}
+                className="sim-viewport__canvas"
+              />
+              <div className="sim-viewport__overlay sim-viewport__overlay--tl">
+                00.00 · 00.00
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--tr">
+                SECTOR · MICRO-01
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--bl">
+                T + {String(displayTick).padStart(5, '0')}
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--br">
+                LIVE · {String(stats.alive).padStart(2, '0')} entities
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="sim-controls">
+          <button
+            className={running ? 'btn' : 'btn btn--primary'}
+            onClick={toggleRunning}
+          >
+            {running ? '⏸ Pause' : '▶ Resume'}
+          </button>
+          <button className="btn" onClick={changeSpeed}>
+            ⚡ {speed}× → {speed === 4 ? '1' : speed === 2 ? '4' : '2'}×
+          </button>
+          <div className="sim-controls__divider" />
+          <button className="btn" onClick={addCreature}>+ Creature</button>
+          <button className="btn" onClick={addFoodBurst}>+ Food</button>
+          <div className="sim-controls__divider" />
+          <button className="btn" onClick={exportLogs}>⎘ Export logs</button>
+          <button className="btn" onClick={saveState}>◼ Save state</button>
+          <button className="btn" onClick={loadState}>◻ Load state</button>
+          <button
+            className="btn btn--danger sim-controls__spacer"
+            onClick={() => {
+              creaturesRef.current = [];
+              foodRef.current = [];
+              tickRef.current = 0;
+              setDisplayTick(0);
+              statsRef.current = { born: 0, died: 0, totalEaten: 0 };
+              for (let i = 0; i < INITIAL_CREATURES; i++) creaturesRef.current.push(createCreature());
+              for (let i = 0; i < INITIAL_FOOD; i++) foodRef.current.push(createFood());
+              setSelected(null);
+              selectedRef.current = null;
+              logRef.current = [];
+              setLog([]);
+              addLog('Ecosystem reset', 'sys', '⟳');
+            }}
+          >
+            ⟳ Reset
+          </button>
+        </div>
+
+        {/* Diagnostics strip */}
+        <div className="hud sim-diag">
+          <Diag label="Alive" value={stats.alive} color="var(--cyan)" />
+          <Diag label="Food" value={stats.food} color="var(--lime)" />
+          <Diag label="Births" value={stats.born} color="var(--lime)" />
+          <Diag label="Deaths" value={stats.died} color="var(--red)" />
+          <Diag label="Total meals" value={stats.totalEaten} color="var(--amber)" />
+        </div>
+      </main>
+
+      {/* Right rail */}
+      <aside className="sim-screen__rail">
+        {selected && <SelectionPanel creature={selected} />}
+        <StatsPanel stats={stats} />
+        <EventsPanel log={log} />
+      </aside>
+    </div>
+  );
+}
+
+// =============================================================
+// Sub-components
+// =============================================================
+function Diag({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="sim-diag__cell">
+      <div className="tick sim-diag__label">{label}</div>
+      <div
+        className="sim-diag__value"
+        style={{ color, textShadow: `0 0 10px ${color}` }}
+      >
+        {value}
       </div>
     </div>
   );
 }
 
-function StatRow({ icon, label, value, color, last }: {
-  icon: string; label: string; value: number; color: string; last?: boolean;
+function PanelHeader({
+  title,
+  code,
+  accent,
+  right,
+}: {
+  title: string;
+  code: string;
+  accent: 'cyan' | 'magenta' | 'amber' | 'lime';
+  right?: React.ReactNode;
 }) {
   return (
-    <div className="stat-row" style={{ borderBottom: last ? 'none' : undefined }}>
-      <span className="stat-label">{icon} {label}</span>
-      <span className="stat-value" style={{ color }}>{value}</span>
+    <div className="hud__header">
+      <div className="sim-panel__head-left">
+        <span
+          className="dot"
+          style={{
+            background: `var(--${accent})`,
+            boxShadow: `0 0 10px var(--${accent})`,
+          }}
+        />
+        <span>{title}</span>
+        <span className="sim-panel__code">· {code}</span>
+      </div>
+      {right !== undefined && <div className="sim-panel__head-right">{right}</div>}
     </div>
   );
 }
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
+function StatsPanel({ stats }: { stats: SimStats }) {
+  const cap = 60;
+  const alivePct = Math.min(100, (stats.alive / cap) * 100);
   return (
-    <div className="row">
-      <span className="row-k">{k}</span>
-      <span className="row-v">{v}</span>
+    <div className="hud brackets sim-panel">
+      <span className="bk-tr" />
+      <span className="bk-bl" />
+      <PanelHeader title="Population" code="POP-01" accent="cyan" right={`CAP ${cap}`} />
+      <div className="hud__body">
+        <div className="stat">
+          <div className="stat__label">
+            <span className="swatch" style={{ background: 'var(--cyan)' }} />
+            Alive
+          </div>
+          <div className="stat__value stat__value--cyan">
+            {String(stats.alive).padStart(2, '0')}
+          </div>
+        </div>
+        <div className="statbar">
+          <div className="statbar__fill" style={{ width: `${alivePct}%` }} />
+        </div>
+        <div className="stat">
+          <div className="stat__label">
+            <span className="swatch" style={{ background: 'var(--lime)' }} />
+            Food
+          </div>
+          <div className="stat__value stat__value--lime">{stats.food}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Births</div>
+          <div className="stat__value stat__value--lime">{stats.born}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Deaths</div>
+          <div className="stat__value stat__value--red">{stats.died}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">
+            <span className="swatch" style={{ background: 'var(--amber)' }} />
+            Total meals
+          </div>
+          <div className="stat__value stat__value--amber">{stats.totalEaten}</div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function stateLabel(s: Creature['state']): string {
-  switch (s) {
-    case 'seek': return '🔍 Seeking';
-    case 'reproduce': return '💕 Reproducing';
-    case 'eat': return '🍽 Eating';
-    default: return '🚶 Wandering';
-  }
+function EventsPanel({ log }: { log: SimLogEntry[] }) {
+  return (
+    <div className="hud brackets sim-panel">
+      <span className="bk-tr" />
+      <span className="bk-bl" />
+      <PanelHeader
+        title="Event Log"
+        code="LOG-02"
+        accent="cyan"
+        right={`${log.length} entries`}
+      />
+      <div className="hud__body">
+        <div className="sim-events">
+          {log.map((e, i) => {
+            const color = EVENT_COLORS[e.kind] ?? 'var(--text-2)';
+            return (
+              <div className="sim-event" key={i}>
+                <span className="sim-event__t">
+                  T+{String(e.tick).padStart(4, '0')}
+                </span>
+                <span
+                  className="sim-event__icon"
+                  style={{ color, textShadow: `0 0 6px ${color}` }}
+                >
+                  {e.icon}
+                </span>
+                <span className="sim-event__text">{e.text}</span>
+              </div>
+            );
+          })}
+          {log.length === 0 && (
+            <div className="sim-events__empty">// no events yet</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SelectionPanel({ creature }: { creature: Creature }) {
+  const color = hueToRgb(creature.hue);
+  const energyPct = Math.max(0, Math.min(100, (creature.energy / creature.maxEnergy) * 100));
+  const sColor = stateColor(creature.state);
+  return (
+    <div className="hud brackets sim-panel">
+      <span className="bk-tr" />
+      <span className="bk-bl" />
+      <PanelHeader
+        title={`Entity · ${creature.name}`}
+        code={creature.id.slice(0, 4).toUpperCase()}
+        accent="magenta"
+      />
+      <div className="hud__body">
+        <div className="sim-sel__head">
+          <div className="sim-sel__swatch" style={{ background: color, color }} />
+          <div>
+            <div className="sim-sel__name">{creature.name}</div>
+            <div
+              className="sim-sel__role"
+              style={{ color, textShadow: `0 0 6px ${color}` }}
+            >
+              Creature · gen {creature.generation}
+            </div>
+          </div>
+        </div>
+        <div className="sim-sel__body">
+          <div className="stat">
+            <div className="stat__label">Energy</div>
+            <div className="stat__value stat__value--cyan">
+              {Math.round(creature.energy)}
+            </div>
+          </div>
+          <div className="statbar">
+            <div
+              className="statbar__fill"
+              style={{ width: `${energyPct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
+            />
+          </div>
+          <div className="stat">
+            <div className="stat__label">Generation</div>
+            <div className="stat__value">{creature.generation}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Children</div>
+            <div className="stat__value">{creature.children}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Age</div>
+            <div className="stat__value">{Math.floor(creature.age / 60)}s</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Current state</div>
+            <div className="stat__value">
+              <span
+                className="sim-sel__state-pill"
+                style={{ color: sColor }}
+              >
+                {stateLabel(creature.state)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

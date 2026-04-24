@@ -1,19 +1,69 @@
-import { Route, Routes, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MainMenu from './components/MainMenu';
 import { simulations } from './simulations/registry';
 import './App.css';
 
+function fmtClock(d: Date = new Date()): string {
+  return d.toISOString().slice(11, 19);
+}
+
+function TopNav() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [clock, setClock] = useState(fmtClock());
+
+  useEffect(() => {
+    const id = setInterval(() => setClock(fmtClock()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const onHome = location.pathname === '/' || location.pathname === '';
+  const sim = simulations.find((s) => location.pathname.startsWith(s.path));
+  const current = onHome
+    ? 'HOME'
+    : sim
+      ? `${sim.shortTitle.toUpperCase()} · P${String(sim.phase).padStart(2, '0')}`
+      : 'UNKNOWN';
+
+  return (
+    <nav className="topnav">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        <button
+          className="topnav__brand"
+          onClick={() => navigate('/')}
+          style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }}
+        >
+          <div className="logo" />
+          <span>SIM·WORLD</span>
+        </button>
+        <span style={{ color: 'var(--text-3)' }}>│</span>
+        {!onHome && (
+          <button
+            className="btn btn--ghost"
+            style={{ padding: '4px 10px', fontSize: 10 }}
+            onClick={() => navigate('/')}
+          >
+            ← Phases
+          </button>
+        )}
+        <span className="chip chip--cyan">{current}</span>
+      </div>
+      <div className="topnav__meta">
+        <div>SESSION <span>#7A3F</span></div>
+        <div>NET <span style={{ color: 'var(--lime)' }}>● ONLINE</span></div>
+        <div>UTC <span>{clock}</span></div>
+        <div style={{ color: 'var(--cyan)' }}>PHASES OF LIFE</div>
+      </div>
+    </nav>
+  );
+}
+
 export default function App() {
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <Link to="/" className="brand">
-          <span className="brand-dot" />
-          <span className="brand-name">Sim<span className="gradient-text">World</span></span>
-        </Link>
-        <span className="muted mono header-tag">phases of life</span>
-      </header>
-      <main className="app-main">
+      <TopNav />
+      <main>
         <Routes>
           <Route path="/" element={<MainMenu />} />
           {simulations.map((sim) => (

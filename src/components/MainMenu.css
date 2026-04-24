@@ -1,158 +1,184 @@
-.menu-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
+/* Landing page (Palantir-inspired HUD) — hero + phase cards. */
+
+.landing {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100svh - 42px);
 }
 
-/* ---------- Hero ---------- */
-.menu-hero {
-  padding: 40px 36px;
-  background:
-    radial-gradient(600px 220px at 0% 0%, rgba(96, 165, 250, 0.18), transparent 60%),
-    radial-gradient(600px 220px at 100% 100%, rgba(244, 114, 182, 0.16), transparent 60%),
-    rgba(255, 255, 255, 0.04);
+.landing__hero-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 28px 20px;
 }
 
-.menu-hero-inner {
-  max-width: 780px;
+.landing__hero {
+  padding: 48px 56px;
+  position: relative;
+  overflow: hidden;
 }
 
-.eyebrow {
-  display: inline-block;
-  font-size: 11px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  padding: 6px 12px;
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  margin-bottom: 22px;
+.landing__hero-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  pointer-events: none;
+}
+.landing__hero-glow--tr {
+  right: -120px;
+  top: -120px;
+  background: radial-gradient(circle, rgba(255, 43, 214, 0.22), transparent 70%);
+}
+.landing__hero-glow--bl {
+  left: -100px;
+  bottom: -160px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.18), transparent 70%);
 }
 
-.menu-title {
-  font-size: clamp(34px, 5vw, 56px);
-  line-height: 1.04;
-  margin: 0 0 16px;
+.landing__title {
+  font-family: var(--sans);
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  max-width: 900px;
+  margin: 0 0 18px;
+  position: relative;
+  z-index: 1;
 }
 
-.menu-sub {
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-dim);
-  max-width: 620px;
+.landing__desc {
+  color: var(--text-1);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 580px;
   margin: 0;
+  position: relative;
+  z-index: 1;
 }
 
-/* ---------- Section title ---------- */
-.section-title {
-  font-size: 13px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  font-weight: 600;
-  padding-left: 4px;
+.landing__phase-map {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 34px;
+  position: relative;
+  z-index: 1;
 }
 
-/* ---------- Sim grid ---------- */
-.menu-grid {
+.landing__phase-map-track {
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+  position: relative;
+}
+
+.landing__phase-map-dot {
+  position: absolute;
+  top: -5px;
+  transform: translateX(-50%);
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--line-2);
+}
+
+/* ── Simulations grid ───────────────────────────────────────── */
+.landing__grid-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 28px 80px;
+}
+
+.landing__section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 18px;
+}
+.landing__section-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.landing__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
 }
 
-.sim-card-link {
-  color: inherit;
-  display: block;
-  transition: transform 0.22s ease;
+@media (max-width: 1200px) {
+  .landing__grid { grid-template-columns: repeat(2, 1fr); }
 }
-.sim-card-link:hover { transform: translateY(-3px); }
-.sim-card-link:hover .sim-card {
-  border-color: rgba(167, 139, 250, 0.55);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
-    0 30px 70px -20px rgba(124, 58, 237, 0.35),
-    0 8px 24px -12px rgba(0, 0, 0, 0.45);
-}
-.sim-card-link:hover .sim-cta {
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.6), rgba(167, 139, 250, 0.6));
-  border-color: rgba(167, 139, 250, 0.7);
+@media (max-width: 680px) {
+  .landing__grid { grid-template-columns: 1fr; }
+  .landing__hero { padding: 32px 24px; }
 }
 
-.sim-card-disabled { cursor: not-allowed; opacity: 0.55; }
-.sim-card-disabled:hover { transform: none; }
-.sim-card-disabled:hover .sim-card {
-  border-color: var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-.sim-card {
+/* ── Phase card ─────────────────────────────────────────────── */
+.phase-card {
+  padding: 18px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 22px 22px 20px;
-  height: 100%;
-  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  gap: 0;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+.phase-card:hover {
+  transform: translateY(-2px);
 }
 
-.sim-card-head {
+.phase-card__head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 18px;
 }
 
-.sim-icon {
-  font-size: 30px;
-  line-height: 1;
-  filter: drop-shadow(0 4px 12px rgba(167, 139, 250, 0.35));
+.phase-card__glyph {
+  width: 42px;
+  height: 42px;
+  border: 1px solid;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  position: relative;
 }
 
-.sim-status {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-}
-.sim-status-available {
-  color: #34d399;
-  border-color: rgba(52, 211, 153, 0.45);
-  background: rgba(52, 211, 153, 0.08);
-}
-.sim-status-planned {
-  color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.04);
+.phase-card__phase {
+  color: var(--text-3);
+  margin-bottom: 6px;
 }
 
-.sim-phase {
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  color: var(--accent-2);
-}
-
-.sim-title {
+.phase-card__title {
+  margin: 0 0 8px;
   font-size: 22px;
-  margin-top: 2px;
+  font-weight: 600;
+  color: var(--text-0);
+  letter-spacing: -0.01em;
 }
 
-.sim-tagline {
-  font-size: 14px;
-  color: var(--text);
-  margin: 0;
-}
-
-.sim-desc {
+.phase-card__blurb {
+  margin: 0 0 12px;
   font-size: 13px;
-  line-height: 1.55;
-  margin: 0;
+  color: var(--text-1);
+  line-height: 1.5;
 }
 
-.sim-cta {
-  margin-top: auto;
-  align-self: flex-start;
+.phase-card__body {
+  margin: 0 0 22px;
   font-size: 12px;
-  padding: 8px 14px;
+  color: var(--text-2);
+  line-height: 1.55;
+  min-height: 100px;
+}
+
+.phase-card__cta {
+  width: 100%;
+  justify-content: center;
+  margin-top: auto;
 }

@@ -1,82 +1,18 @@
-.app-shell {
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+/* App.css — layout for the top nav + routed main area.
+   Most of the visual system lives in index.css. */
+
+main {
+  position: relative;
+  z-index: 2;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px;
-  background: rgba(10, 15, 28, 0.55);
-  backdrop-filter: saturate(160%) blur(10px);
-  -webkit-backdrop-filter: saturate(160%) blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  font-size: 18px;
-}
-
-.brand-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #c4b5fd, #7c3aed 60%, #4c1d95);
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.7);
-}
-
-.header-tag {
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.app-main {
-  flex: 1;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 28px 24px 48px;
-}
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  color: var(--text-dim);
-  margin-bottom: 16px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-  width: fit-content;
-}
-.back-link:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateX(-2px);
-}
-
-/* Keyboard focus ring — accessible without underlines. */
-:focus-visible {
-  outline: 2px solid rgba(167, 139, 250, 0.85);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-a:focus-visible,
-button:focus-visible,
-.sim-card-link:focus-visible {
-  outline-offset: 4px;
+@media (max-width: 860px) {
+  .topnav__meta {
+    gap: 12px;
+    font-size: 9px;
+  }
+  .topnav__meta > div:nth-child(3),
+  .topnav__meta > div:nth-child(4) {
+    display: none;
+  }
 }

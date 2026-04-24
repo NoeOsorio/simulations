@@ -1,205 +1,315 @@
 /* ===========================================================
    Phase 03 — Tribal Society
-   Self-contained CSS. Duplicates the shared sim layout primitives
-   so earlier phases' styles remain untouched.
+   Palantir-inspired HUD layout. All primitives (hud, brackets,
+   btn, stat, chip, statbar) live in src/index.css. This file
+   only carries layout + a few Phase 03-specific tweaks.
    =========================================================== */
 
-.sim-page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.sim-screen {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+  position: relative;
+  z-index: 2;
 }
 
-.sim-header {
+@media (max-width: 1080px) {
+  .sim-screen { grid-template-columns: 1fr; }
+}
+
+.sim-screen__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sim-screen__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Title block */
+.sim-title {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-}
-
-.sim-h1 {
-  font-size: clamp(28px, 4vw, 40px);
-  letter-spacing: -0.02em;
-  margin: 8px 0 4px;
-}
-
-.sim-tag {
-  font-size: 13px;
-  margin: 0;
-}
-
-.sim-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 18px;
-  align-items: start;
-}
-
-@media (max-width: 980px) {
-  .sim-layout { grid-template-columns: 1fr; }
-}
-
-.sim-canvas-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.canvas-wrap {
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.sim-canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-  cursor: pointer;
-  background: #0a1628;
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
-}
-
-.control-row {
-  display: flex;
+  gap: 20px;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
 }
 
-.control-spacer {
-  flex: 1;
-  min-width: 8px;
+.sim-title__eyebrow {
+  color: var(--magenta);
+  margin-bottom: 6px;
 }
 
-.sim-side {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.sim-title__h2 {
+  font-family: var(--sans);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  line-height: 1.02;
 }
 
-.side-card {
-  padding: 16px 16px 14px;
+.sim-title__h2-gradient {
+  background: linear-gradient(90deg, #00e5ff, #ff2bd6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgba(255, 43, 214, 0.4));
 }
 
-.side-title {
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  font-weight: 600;
-  margin: 0 0 10px;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.sim-title__desc {
+  margin: 0;
+  color: var(--text-1);
   font-size: 13px;
 }
-.stat-label { color: var(--text); }
-.stat-value { font-weight: 700; font-size: 16px; }
 
-.selected-name {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.selected-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-}
-.row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-dim);
-}
-.row-k { color: var(--text-dim); }
-.row-v { color: var(--text); font-family: var(--font-mono); }
-
-.events-card {
-  max-height: 260px;
-  display: flex;
-  flex-direction: column;
-}
-.events-scroll {
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-right: 4px;
-}
-.event-line {
-  font-size: 11px;
-  color: var(--text-dim);
-  padding: 3px 2px;
-  font-family: var(--font-mono);
-  line-height: 1.45;
-}
-.event-line + .event-line {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+.sim-title__tickrate {
+  text-align: right;
+  flex-shrink: 0;
 }
 
-/* ========== Phase 03-specific ========== */
-
-.roles-card .role-row {
-  display: grid;
-  grid-template-columns: 22px 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-}
-.roles-card .role-row:last-child { border-bottom: none; }
-
-.role-swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  box-shadow: 0 0 10px currentColor;
+.sim-title__tickrate-label {
+  color: var(--text-3);
+  margin-bottom: 2px;
 }
 
-.role-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.role-hint { font-size: 11px; color: var(--text-dim); line-height: 1.3; }
-.role-count { font-size: 14px; font-weight: 700; font-family: var(--font-mono); }
+.sim-title__tickrate-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
 
-.bar {
+.sim-title__tickrate-value[data-state="paused"] {
+  color: var(--amber);
+  text-shadow: 0 0 10px var(--amber);
+}
+
+.sim-title__tickrate-value[data-state="running"] {
+  color: var(--cyan);
+  text-shadow: 0 0 10px var(--cyan);
+}
+
+/* Viewport frame */
+.viewport-frame {
+  padding: 0;
   position: relative;
-  height: 6px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
-.bar-fill {
+
+.viewport-frame__canvas-wrap {
+  padding: 14px;
+  background: radial-gradient(ellipse at center, #0c1420 0%, #05070a 80%);
+}
+
+.viewport-frame__canvas-stage {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  aspect-ratio: 800 / 520;
+}
+
+.viewport-frame__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.viewport-frame__overlay {
   position: absolute;
-  inset: 0;
-  border-radius: 4px;
-  transform-origin: left center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
-.selected-badge {
-  display: inline-flex;
+.viewport-frame__overlay--tl { top: 6px; left: 10px; color: var(--text-2); }
+.viewport-frame__overlay--tr { top: 6px; right: 10px; color: var(--cyan); }
+.viewport-frame__overlay--bl { bottom: 6px; left: 10px; color: var(--text-2); }
+.viewport-frame__overlay--br { bottom: 6px; right: 10px; color: var(--text-2); }
+
+/* Controls row */
+.sim-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 8px;
 }
 
-.back-link {
-  font-size: 12px;
-  color: var(--text-dim);
-  padding: 4px 0;
-  display: inline-block;
-  transition: color 0.15s ease;
+.sim-controls .vrule {
+  margin: 4px 6px;
 }
-.back-link:hover { color: var(--text); }
+
+.sim-controls__spacer {
+  flex: 1;
+}
+
+/* Diagnostics strip */
+.diag-strip {
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 720px) {
+  .diag-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+.diag {
+  min-width: 0;
+}
+
+.diag__label {
+  margin-bottom: 3px;
+}
+
+.diag__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* Role rows inside RolesPanel */
+.role-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--divider);
+}
+.role-row:last-child { border-bottom: 0; }
+
+.role-row__left {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.role-row__dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.role-row__name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-0);
+  font-weight: 500;
+}
+
+.role-row__desc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.role-row__count {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+/* Events */
+.events-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 50px 16px 1fr;
+  gap: 6px;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-1);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+  line-height: 1.45;
+}
+.event-row:last-child { border-bottom: 0; }
+
+.event-row__t {
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.event-row__icon {
+  text-align: center;
+  font-size: 11px;
+}
+
+.event-row__text {
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Selection panel portrait */
+.inspector-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--divider);
+}
+
+.inspector-head__portrait {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.inspector-head__portrait::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.inspector-head__name {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-0);
+  line-height: 1.15;
+}
+
+.inspector-head__sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.inspector-body {
+  padding-top: 10px;
+}
