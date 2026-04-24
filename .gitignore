@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Playwright MCP cache from in-session browser testing
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
