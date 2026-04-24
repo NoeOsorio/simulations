@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import MicroEcosystem from './micro-ecosystem/MicroEcosystem';
 import SkillEcosystem from './skill-ecosystem/SkillEcosystem';
+import TribalSociety from './tribal-society/TribalSociety';
 
 export interface SimulationMeta {
   id: string;
@@ -47,5 +48,18 @@ export const simulations: SimulationMeta[] = [
     path: '/skill-ecosystem',
     status: 'available',
     Component: SkillEcosystem,
+  },
+  {
+    id: 'tribal-society',
+    phase: 3,
+    title: 'Phase 3 — Tribal Society',
+    shortTitle: 'Tribal Society',
+    tagline: 'Nobody is self-sufficient. Five roles, ages, and teachers.',
+    description:
+      'Producers can\'t eat their own crop, healers can\'t heal themselves, builders can\'t use their own nests. Creatures are born as children, learn from teachers, grow into a role the tribe needs most, age into elders, and die of old age.',
+    icon: '🏘️',
+    path: '/tribal-society',
+    status: 'available',
+    Component: TribalSociety,
   },
 ];
