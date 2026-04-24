@@ -1007,8 +1007,8 @@ export default function SkillEcosystem() {
         </div>
       </div>
 
-      {/* Side rail */}
-      <aside className="sim-screen__rail">
+      {/* Left rail — selection + population + roles */}
+      <aside className="sim-screen__rail sim-screen__rail--left">
         {selected && (
           <SelectionPanel creature={selected} />
         )}
@@ -1111,7 +1111,10 @@ export default function SkillEcosystem() {
             );
           })}
         </PanelShell>
+      </aside>
 
+      {/* Right rail — event log */}
+      <aside className="sim-screen__rail sim-screen__rail--right">
         <PanelShell
           title="Event Log"
           code="LOG-03"

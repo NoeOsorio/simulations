@@ -732,10 +732,14 @@ export default function MicroEcosystem() {
         </div>
       </main>
 
-      {/* Right rail */}
-      <aside className="sim-screen__rail">
+      {/* Left rail — selection + stats */}
+      <aside className="sim-screen__rail sim-screen__rail--left">
         {selected && <SelectionPanel creature={selected} />}
         <StatsPanel stats={stats} />
+      </aside>
+
+      {/* Right rail — event log */}
+      <aside className="sim-screen__rail sim-screen__rail--right">
         <EventsPanel log={log} />
       </aside>
     </div>

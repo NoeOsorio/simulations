@@ -6,14 +6,16 @@
 
 .sim-screen {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: 300px minmax(0, 1fr) 320px;
+  grid-template-areas: "left main right";
   gap: 16px;
   padding: 20px 24px;
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
 .sim-screen__main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -25,10 +27,25 @@
   gap: 10px;
   min-width: 0;
 }
+.sim-screen__rail--left  { grid-area: left;  }
+.sim-screen__rail--right { grid-area: right; }
+
+@media (max-width: 1280px) {
+  .sim-screen {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas:
+      "main right"
+      "left right";
+  }
+}
 
 @media (max-width: 1024px) {
   .sim-screen {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "left"
+      "right";
   }
 }
 

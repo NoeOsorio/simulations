@@ -1175,8 +1175,8 @@ export default function TribalSociety() {
         </div>
       </div>
 
-      {/* RIGHT — HUD rail */}
-      <aside className="sim-screen__rail">
+      {/* LEFT rail — selection + population + roles */}
+      <aside className="sim-screen__rail sim-screen__rail--left">
         <SelectionPanel selected={selected} />
 
         <Panel title="Population" code="POP-01" accent="cyan" right={`CAP ${MAX_POPULATION}`}>
@@ -1217,6 +1217,41 @@ export default function TribalSociety() {
           </div>
         </Panel>
 
+        <Panel title="Roles · Adults & Elders" code="RLS-03" accent="magenta">
+          {ROLES.map((role) => {
+            const color = hueToRgb(ROLE_HUE[role]);
+            const count =
+              role === 'farmer' ? stats.farmers
+                : role === 'harvester' ? stats.harvesters
+                  : role === 'healer' ? stats.healers
+                    : role === 'builder' ? stats.builders
+                      : stats.teachers;
+            return (
+              <div key={role} className="role-row">
+                <div className="role-row__left">
+                  <span
+                    className="role-row__dot"
+                    style={{ background: color, boxShadow: `0 0 10px ${color}, 0 0 4px ${color}` }}
+                  />
+                  <div>
+                    <div className="role-row__name">{ROLE_LABEL[role]}</div>
+                    <div className="role-row__desc">{ROLE_DESC[role]}</div>
+                  </div>
+                </div>
+                <div
+                  className="role-row__count"
+                  style={{ color, textShadow: `0 0 8px ${color}` }}
+                >
+                  {count}
+                </div>
+              </div>
+            );
+          })}
+        </Panel>
+      </aside>
+
+      {/* RIGHT rail — production + event log */}
+      <aside className="sim-screen__rail sim-screen__rail--right">
         <Panel title="Production" code="PRD-02" accent="amber">
           <div className="stat">
             <div className="stat__label">
@@ -1256,38 +1291,6 @@ export default function TribalSociety() {
               <span style={{ color: 'var(--text-3)' }}>({stats.nestsBuilt} built)</span>
             </div>
           </div>
-        </Panel>
-
-        <Panel title="Roles · Adults & Elders" code="RLS-03" accent="magenta">
-          {ROLES.map((role) => {
-            const color = hueToRgb(ROLE_HUE[role]);
-            const count =
-              role === 'farmer' ? stats.farmers
-                : role === 'harvester' ? stats.harvesters
-                  : role === 'healer' ? stats.healers
-                    : role === 'builder' ? stats.builders
-                      : stats.teachers;
-            return (
-              <div key={role} className="role-row">
-                <div className="role-row__left">
-                  <span
-                    className="role-row__dot"
-                    style={{ background: color, boxShadow: `0 0 10px ${color}, 0 0 4px ${color}` }}
-                  />
-                  <div>
-                    <div className="role-row__name">{ROLE_LABEL[role]}</div>
-                    <div className="role-row__desc">{ROLE_DESC[role]}</div>
-                  </div>
-                </div>
-                <div
-                  className="role-row__count"
-                  style={{ color, textShadow: `0 0 8px ${color}` }}
-                >
-                  {count}
-                </div>
-              </div>
-            );
-          })}
         </Panel>
 
         <Panel
