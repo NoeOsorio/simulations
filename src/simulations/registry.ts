@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import MicroEcosystem from './micro-ecosystem/MicroEcosystem';
+import SkillEcosystem from './skill-ecosystem/SkillEcosystem';
 
 export interface SimulationMeta {
   id: string;
@@ -33,5 +34,18 @@ export const simulations: SimulationMeta[] = [
     path: '/micro-ecosystem',
     status: 'available',
     Component: MicroEcosystem,
+  },
+  {
+    id: 'skill-ecosystem',
+    phase: 2,
+    title: 'Phase 2 — Skill Ecosystem',
+    shortTitle: 'Skill Ecosystem',
+    tagline: 'Four specialist roles, limited food, inheritable skills.',
+    description:
+      'Food stops being free. Farmers plant herbs, harvesters grow apples, healers keep their kin alive, and builders raise nests that speed rest and mating. Children inherit their role from one parent, with small mutations.',
+    icon: '🛠️',
+    path: '/skill-ecosystem',
+    status: 'available',
+    Component: SkillEcosystem,
   },
 ];

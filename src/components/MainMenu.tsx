@@ -62,7 +62,7 @@ function ComingSoonCard() {
         <span className="sim-icon" aria-hidden>✨</span>
         <span className="sim-status sim-status-planned">soon</span>
       </div>
-      <div className="sim-phase mono">PHASE 02</div>
+      <div className="sim-phase mono">PHASE 03</div>
       <h3 className="sim-title">Predator & Prey</h3>
       <p className="sim-tagline">First food chains and survival pressure.</p>
       <p className="sim-desc muted">
