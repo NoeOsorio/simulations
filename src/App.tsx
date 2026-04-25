@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MainMenu from './components/MainMenu';
+import SimulationViewer from './components/SimulationViewer';
 import { simulations } from './simulations/registry';
 import './App.css';
 
@@ -75,7 +76,15 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MainMenu />} />
           {simulations.map((sim) => (
-            <Route key={sim.id} path={sim.path} element={<sim.Component />} />
+            <Route
+              key={sim.id}
+              path={sim.path}
+              element={
+                <SimulationViewer>
+                  <sim.Component />
+                </SimulationViewer>
+              }
+            />
           ))}
         </Routes>
       </main>
