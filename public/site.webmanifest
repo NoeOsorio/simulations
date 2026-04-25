@@ -1,0 +1,19 @@
+{
+  "name": "Sim World — Phases of Life",
+  "short_name": "Sim World",
+  "description": "A Palantir-style HUD that hosts phased simulations of organic life — from the first single-cell creatures to tribal societies and beyond.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05070a",
+  "theme_color": "#00e5ff",
+  "categories": ["education", "games", "science"],
+  "icons": [
+    { "src": "/favicon-16.png",       "sizes": "16x16",   "type": "image/png" },
+    { "src": "/favicon-32.png",       "sizes": "32x32",   "type": "image/png" },
+    { "src": "/icon-192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png",             "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "maskable" }
+  ]
+}

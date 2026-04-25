@@ -2,10 +2,129 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a0f1c" />
-    <title>Sim World — Phases of Life</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         Primary
+         ──────────────────────────────────────────────────────────── -->
+    <title>Sim World — Phases of Life · by Noe Osorio</title>
+    <meta name="description" content="A Palantir-style HUD that hosts phased simulations of organic life — from single-cell creatures to tribal societies. Built by Noe Osorio." />
+    <meta name="author" content="Noe Osorio" />
+    <meta name="creator" content="Noe Osorio" />
+    <meta name="publisher" content="Noe Osorio" />
+    <meta name="keywords" content="simulation, artificial life, ecosystem, agent-based simulation, emergent behavior, palantir hud, react, typescript, vite, generative systems, noe osorio" />
+    <meta name="application-name" content="Sim World" />
+    <meta name="category" content="Simulation, Science, Education" />
+    <meta name="rating" content="general" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://simulations.noeosorio.com/" />
+    <link rel="author" href="https://noeosorio.com/" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         Theme (Palantir neon)
+         ──────────────────────────────────────────────────────────── -->
+    <meta name="theme-color" content="#00e5ff" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#05070a" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="msapplication-TileColor" content="#05070a" />
+    <meta name="msapplication-TileImage" content="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Sim World" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         Icons & manifest
+         ──────────────────────────────────────────────────────────── -->
+    <link rel="icon"          type="image/png" sizes="16x16"   href="/favicon-16.png" />
+    <link rel="icon"          type="image/png" sizes="32x32"   href="/favicon-32.png" />
+    <link rel="icon"          type="image/png" sizes="48x48"   href="/favicon-48.png" />
+    <link rel="icon"          type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon"          type="image/png" sizes="512x512" href="/logo.png" />
+    <link rel="shortcut icon" type="image/png" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         Open Graph (Facebook, LinkedIn, iMessage, Slack, WhatsApp…)
+         ──────────────────────────────────────────────────────────── -->
+    <meta property="og:type"             content="website" />
+    <meta property="og:site_name"        content="Sim World" />
+    <meta property="og:title"            content="Sim World — Phases of Life" />
+    <meta property="og:description"      content="A Palantir-style HUD that hosts phased simulations of organic life — from single-cell creatures to tribal societies." />
+    <meta property="og:url"              content="https://simulations.noeosorio.com/" />
+    <meta property="og:locale"           content="en_US" />
+    <meta property="og:locale:alternate" content="es_MX" />
+    <meta property="og:image"            content="https://simulations.noeosorio.com/og-image.png" />
+    <meta property="og:image:secure_url" content="https://simulations.noeosorio.com/og-image.png" />
+    <meta property="og:image:type"       content="image/png" />
+    <meta property="og:image:width"      content="1200" />
+    <meta property="og:image:height"     content="1200" />
+    <meta property="og:image:alt"        content="Sim World logo — a prismatic icosahedron with a glass cube at its core, on a Palantir-style neon grid." />
+
+    <meta property="article:author"    content="https://noeosorio.com/" />
+    <meta property="profile:username"  content="NoeOsorio" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         Twitter / X
+         ──────────────────────────────────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Sim World — Phases of Life" />
+    <meta name="twitter:description" content="A Palantir-style HUD that hosts phased simulations of organic life. Built by Noe Osorio." />
+    <meta name="twitter:image"       content="https://simulations.noeosorio.com/og-image.png" />
+    <meta name="twitter:image:alt"   content="Sim World logo — a prismatic icosahedron with a glass cube at its core." />
+    <meta name="twitter:creator"     content="@noeosorio" />
+    <meta name="twitter:site"        content="@noeosorio" />
+
+    <!-- ────────────────────────────────────────────────────────────
+         JSON-LD structured data
+         ──────────────────────────────────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://simulations.noeosorio.com/#website",
+          "url": "https://simulations.noeosorio.com/",
+          "name": "Sim World",
+          "description": "A Palantir-style HUD that hosts phased simulations of organic life.",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://noeosorio.com/#person" },
+          "author":    { "@id": "https://noeosorio.com/#person" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Sim World",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web",
+          "url": "https://simulations.noeosorio.com/",
+          "image": "https://simulations.noeosorio.com/og-image.png",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "author": { "@id": "https://noeosorio.com/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://noeosorio.com/#person",
+          "name": "Noe Osorio",
+          "url": "https://noeosorio.com/",
+          "email": "mailto:business@noeosorio.com",
+          "jobTitle": "Software Engineer",
+          "sameAs": [
+            "https://noeosorio.com/",
+            "https://github.com/NoeOsorio"
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- ────────────────────────────────────────────────────────────
+         Performance hints
+         ──────────────────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href="/logo.png" />
   </head>
   <body>
     <div id="root"></div>
