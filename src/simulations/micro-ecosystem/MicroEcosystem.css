@@ -1,146 +1,336 @@
-.sim-page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+/* ==============================================================
+   Phase 01 — Micro Ecosystem layout
+   Uses the global HUD primitives from src/index.css
+   ============================================================== */
+
+.sim-screen {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 320px;
+  grid-template-areas: "left main right";
+  gap: 16px;
+  padding: 20px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.sim-header {
+.sim-screen__main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sim-screen__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.sim-screen__rail--left  { grid-area: left;  }
+.sim-screen__rail--right { grid-area: right; }
+
+@media (max-width: 1280px) {
+  .sim-screen {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas:
+      "main right"
+      "left right";
+  }
+}
+
+@media (max-width: 1024px) {
+  .sim-screen {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "left"
+      "right";
+  }
+}
+
+/* ── Title block ──────────────────────────────────────────────── */
+.sim-title {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  margin-bottom: 14px;
 }
 
-.sim-h1 {
-  font-size: clamp(28px, 4vw, 40px);
+.sim-title__eyebrow {
+  color: var(--cyan);
+  margin-bottom: 6px;
+}
+
+.sim-title__h2 {
+  font-family: var(--sans);
+  font-size: 38px;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 8px 0 4px;
+  margin: 0 0 4px;
 }
 
-.sim-tag {
-  font-size: 13px;
+.sim-title__accent {
+  background: linear-gradient(90deg, #00e5ff, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.4));
+}
+
+.sim-title__sub {
   margin: 0;
+  color: var(--text-1);
+  font-size: 13px;
 }
 
-.sim-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 18px;
-  align-items: start;
+.sim-title__rate {
+  text-align: right;
+  flex-shrink: 0;
 }
 
-@media (max-width: 980px) {
-  .sim-layout { grid-template-columns: 1fr; }
+.sim-title__rate-label {
+  color: var(--text-3);
+  margin-bottom: 2px;
 }
 
-/* ---------- Canvas ---------- */
-.sim-canvas-col {
+.sim-title__rate-value {
+  font-family: var(--mono);
+  font-size: 22px;
+}
+
+.sim-title__rate-value--running {
+  color: var(--cyan);
+  text-shadow: 0 0 10px var(--cyan);
+}
+
+.sim-title__rate-value--paused {
+  color: var(--amber);
+  text-shadow: 0 0 10px var(--amber);
+}
+
+/* ── Viewport frame ───────────────────────────────────────────── */
+.sim-viewport {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-viewport__head-left {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 10px;
 }
 
-.canvas-wrap {
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.03);
+.sim-viewport__head-left .sim-viewport__code {
+  color: var(--text-3);
 }
 
-.sim-canvas {
+.sim-viewport__head-right {
+  display: flex;
+  gap: 12px;
+  color: var(--text-2);
+}
+
+.sim-viewport__rec {
+  color: var(--cyan);
+}
+
+.sim-viewport__stage {
+  padding: 14px;
+  background: radial-gradient(ellipse at center, #0c1420 0%, #05070a 80%);
+}
+
+.sim-viewport__canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 800 / 520;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.sim-viewport__canvas {
   display: block;
   width: 100%;
-  height: auto;
-  border-radius: 12px;
-  cursor: pointer;
-  background: #0a1628;
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+  height: 100%;
+  cursor: crosshair;
 }
 
-.control-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.control-spacer {
-  flex: 1;
-  min-width: 8px;
-}
-
-/* ---------- Side panel ---------- */
-.sim-side {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.side-card {
-  padding: 16px 16px 14px;
-}
-
-.side-title {
-  font-size: 11px;
-  letter-spacing: 0.28em;
+.sim-viewport__overlay {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--text-2);
   text-transform: uppercase;
-  color: var(--text-dim);
-  font-weight: 600;
-  margin: 0 0 10px;
+  pointer-events: none;
 }
 
-.stat-row {
+.sim-viewport__overlay--tl { top: 6px;    left: 10px; }
+.sim-viewport__overlay--tr { top: 6px;    right: 10px; color: var(--cyan); }
+.sim-viewport__overlay--bl { bottom: 6px; left: 10px; }
+.sim-viewport__overlay--br { bottom: 6px; right: 10px; }
+
+/* ── Controls row ─────────────────────────────────────────────── */
+.sim-controls {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 13px;
 }
 
-.stat-label { color: var(--text); }
-.stat-value { font-weight: 700; font-size: 16px; }
-
-.selected-name {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
+.sim-controls__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line-2);
+  margin: 4px 6px;
 }
 
-.selected-stats {
+.sim-controls__spacer {
+  margin-left: auto;
+}
+
+/* ── Diagnostics strip ────────────────────────────────────────── */
+.sim-diag {
+  margin-top: 14px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+.sim-diag__cell {
+  min-width: 0;
+}
+
+.sim-diag__label {
+  margin-bottom: 3px;
+}
+
+.sim-diag__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Rail panels ──────────────────────────────────────────────── */
+.sim-panel {
+  position: relative;
+}
+
+.sim-panel__code {
+  color: var(--text-3);
+  margin-left: 4px;
+}
+
+.sim-panel__head-left {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-dim);
-}
-.row-k { color: var(--text-dim); }
-.row-v { color: var(--text); font-family: var(--font-mono); }
-
-.events-card {
-  max-height: 240px;
-  display: flex;
-  flex-direction: column;
+.sim-panel__head-right {
+  color: var(--text-2);
 }
 
-.events-scroll {
+/* ── Events list ──────────────────────────────────────────────── */
+.sim-events {
+  max-height: 260px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   padding-right: 4px;
 }
 
-.event-line {
+.sim-event {
+  display: grid;
+  grid-template-columns: 42px 14px 1fr;
+  gap: 6px;
+  padding: 4px 0;
+  font-family: var(--mono);
   font-size: 11px;
-  color: var(--text-dim);
-  padding: 3px 2px;
-  font-family: var(--font-mono);
-  line-height: 1.45;
+  color: var(--text-1);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
 }
-.event-line + .event-line {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+
+.sim-event:last-child {
+  border-bottom: none;
+}
+
+.sim-event__t {
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.sim-event__icon {
+  text-align: center;
+}
+
+.sim-event__text {
+  word-break: break-word;
+}
+
+.sim-events__empty {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 0;
+}
+
+/* ── Selection panel ──────────────────────────────────────────── */
+.sim-sel__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--divider);
+}
+
+.sim-sel__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 0 20px currentColor, inset 0 0 10px rgba(255, 255, 255, 0.4);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sim-sel__swatch::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sim-sel__name {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+
+.sim-sel__role {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sim-sel__body {
+  padding-top: 10px;
+}
+
+.sim-sel__state-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.25);
 }

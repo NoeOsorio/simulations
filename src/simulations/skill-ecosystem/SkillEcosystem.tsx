@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   CANVAS_H,
   CANVAS_W,
@@ -58,6 +57,8 @@ import {
 } from '../../lib/persistence';
 import './SkillEcosystem.css';
 
+const PHASE_ACCENT = '#a8ff2b'; // lime
+
 export default function SkillEcosystem() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const creaturesRef = useRef<Creature[]>([]);
@@ -69,6 +70,7 @@ export default function SkillEcosystem() {
 
   const [running, setRunning] = useState(true);
   const [speed, setSpeed] = useState(1);
+  const [tick, setTick] = useState(0);
   const [stats, setStats] = useState<SimStats>({
     alive: 0,
     food: 0,
@@ -367,24 +369,48 @@ export default function SkillEcosystem() {
       }
     };
 
-    // Pre-rendered static backdrop (see CLAUDE.md performance note).
+    // Pre-rendered static backdrop: radial dark void + cyan HUD grid.
     const bgCanvas = document.createElement('canvas');
     bgCanvas.width = CANVAS_W;
     bgCanvas.height = CANVAS_H;
     const bgCtx = bgCanvas.getContext('2d')!;
-    const bgGrad = bgCtx.createLinearGradient(0, 0, 0, CANVAS_H);
-    bgGrad.addColorStop(0, '#0b1a2f');
-    bgGrad.addColorStop(0.5, '#10233c');
-    bgGrad.addColorStop(1, '#0a1b2c');
+    const bgGrad = bgCtx.createRadialGradient(
+      CANVAS_W / 2, CANVAS_H / 2, 0,
+      CANVAS_W / 2, CANVAS_H / 2, Math.max(CANVAS_W, CANVAS_H) * 0.8
+    );
+    bgGrad.addColorStop(0, '#0c1420');
+    bgGrad.addColorStop(1, '#05070a');
     bgCtx.fillStyle = bgGrad;
     bgCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    bgCtx.fillStyle = 'rgba(120,200,255,0.06)';
-    for (let x = 20; x < CANVAS_W; x += 30) {
-      for (let y = 20; y < CANVAS_H; y += 30) {
-        bgCtx.beginPath();
-        bgCtx.arc(x, y, 1, 0, Math.PI * 2);
-        bgCtx.fill();
-      }
+
+    // Minor 40px grid.
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.06)';
+    bgCtx.lineWidth = 1;
+    for (let x = 0; x < CANVAS_W; x += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
+    }
+    for (let y = 0; y < CANVAS_H; y += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
+    }
+    // Major 200px grid.
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.12)';
+    for (let x = 0; x < CANVAS_W; x += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
+    }
+    for (let y = 0; y < CANVAS_H; y += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
     }
 
     const drawFood = (f: Food, tick: number) => {
@@ -716,6 +742,7 @@ export default function SkillEcosystem() {
       const tick = tickRef.current;
       ctx.drawImage(bgCanvas, 0, 0);
 
+      // Ambient drifting particles — mostly invisible but add motion in the void.
       for (let i = 0; i < 15; i++) {
         const px = (tick * 0.2 + i * 97) % CANVAS_W;
         const py = ((Math.sin(tick * 0.01 + i) * 50 + i * 37) % CANVAS_H + CANVAS_H) % CANVAS_H;
@@ -729,6 +756,25 @@ export default function SkillEcosystem() {
       for (const n of nestsRef.current) drawNest(n, tick);
       for (const f of foodRef.current) drawFood(f, tick);
       for (const c of creaturesRef.current) drawCreature(c, tick);
+
+      // HUD corner tick marks (10px L brackets in cyan).
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+      ctx.lineWidth = 1;
+      const tl = 10;
+      ctx.beginPath();
+      ctx.moveTo(0, tl); ctx.lineTo(0, 0); ctx.lineTo(tl, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(CANVAS_W - tl, 0); ctx.lineTo(CANVAS_W, 0); ctx.lineTo(CANVAS_W, tl);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, CANVAS_H - tl); ctx.lineTo(0, CANVAS_H); ctx.lineTo(tl, CANVAS_H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(CANVAS_W - tl, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H - tl);
+      ctx.stroke();
+      ctx.restore();
 
       if (tick % 30 === 0) {
         let farmers = 0, harvesters = 0, healers = 0, builders = 0;
@@ -752,6 +798,7 @@ export default function SkillEcosystem() {
           foodProduced: statsRef.current.foodProduced,
           nestsBuilt: statsRef.current.nestsBuilt,
         });
+        setTick(tick);
         if (selectedRef.current) {
           const found = creaturesRef.current.find((c) => c.id === selectedRef.current!.id);
           if (found) setSelected({ ...found });
@@ -862,172 +909,429 @@ export default function SkillEcosystem() {
     }
   };
 
+  const aliveCap = 60;
+  const netDelta = stats.born - stats.died;
+
   return (
-    <div className="sim-page">
-      <Link to="/" className="back-link">← Back to menu</Link>
-
-      <header className="sim-header">
-        <div>
-          <span className="eyebrow mono">Phase 02</span>
-          <h1 className="sim-h1">
-            Skill <span className="gradient-text">Ecosystem</span>
-          </h1>
-          <p className="muted sim-tag">
-            Four specialist roles, limited food, and inheritable skills. Click a creature to inspect it.
-          </p>
+    <div className="sim-screen">
+      <div className="sim-screen__main">
+        {/* Title block */}
+        <div className="sim-title">
+          <div>
+            <div className="tick sim-title__eyebrow">▌ PHASE 02 · SKILL ECOSYSTEM</div>
+            <h2 className="sim-title__h2">
+              Skill <span className="sim-title__accent">Ecosystem</span>
+            </h2>
+            <p className="sim-title__sub">
+              Four specialist roles, limited food, and inheritable skills. Click a creature to inspect it.
+            </p>
+          </div>
+          <div className="sim-title__rate">
+            <div className="tick sim-title__rate-label">Tick rate</div>
+            <div
+              className={
+                running
+                  ? 'sim-title__rate-value sim-title__rate-value--running'
+                  : 'sim-title__rate-value sim-title__rate-value--paused'
+              }
+            >
+              {running ? `${speed.toFixed(1)}×` : 'PAUSED'}
+            </div>
+          </div>
         </div>
-      </header>
 
-      <div className="sim-layout">
-        <div className="sim-canvas-col">
-          <div className="canvas-wrap glass">
-            <canvas
-              ref={canvasRef}
-              width={CANVAS_W}
-              height={CANVAS_H}
-              onClick={handleCanvasClick}
-              className="sim-canvas"
+        {/* Viewport */}
+        <div className="hud brackets sim-viewport">
+          <span className="bk-tr" />
+          <span className="bk-bl" />
+          <div className="hud__header">
+            <div className="sim-viewport__head-left">
+              <span className="dot" />
+              <span>Live Viewport</span>
+              <span className="sim-viewport__code">· VPT-02</span>
+            </div>
+            <div className="sim-viewport__head-right">
+              <span>GRID 40px</span>
+              <span className="sim-viewport__rec">● REC</span>
+            </div>
+          </div>
+          <div className="sim-viewport__stage">
+            <div className="sim-viewport__canvas-wrap">
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_W}
+                height={CANVAS_H}
+                onClick={handleCanvasClick}
+                className="sim-viewport__canvas"
+              />
+              <div className="sim-viewport__overlay sim-viewport__overlay--tl">
+                00.00 · 00.00
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--tr">
+                SECTOR · SKILL-02
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--bl">
+                T + {String(tick).padStart(5, '0')}
+              </div>
+              <div className="sim-viewport__overlay sim-viewport__overlay--br">
+                LIVE · {String(stats.alive).padStart(2, '0')} entities
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="sim-controls">
+          <button
+            className={running ? 'btn' : 'btn btn--primary'}
+            onClick={toggleRunning}
+          >
+            {running ? '⏸ Pause' : '▶ Resume'}
+          </button>
+          <button className="btn" onClick={changeSpeed}>⚡ ×{speed}</button>
+          <div className="sim-controls__divider" />
+          <button className="btn" onClick={addFoodBurst}>🌿 + Food</button>
+          <div className="sim-controls__divider" />
+          <button className="btn" onClick={exportLogs}>⎘ Export logs</button>
+          <button className="btn" onClick={saveState}>◼ Save state</button>
+          <button className="btn" onClick={loadState}>◻ Load state</button>
+        </div>
+
+        {/* Diagnostics strip */}
+        <div className="hud sim-diag">
+          <Diag label="Entities" value={stats.alive} color="var(--cyan)" />
+          <Diag label="Food" value={stats.food} color="var(--lime)" />
+          <Diag label="Births" value={stats.born} color="var(--lime)" />
+          <Diag label="Deaths" value={stats.died} color="var(--red)" />
+          <Diag label="Net Δ" value={netDelta} color="var(--magenta)" signed />
+        </div>
+      </div>
+
+      {/* Left rail — selection + population + roles */}
+      <aside className="sim-screen__rail sim-screen__rail--left">
+        {selected && (
+          <SelectionPanel creature={selected} />
+        )}
+
+        <PanelShell title="Population" code="POP-01" accent="cyan" right={`CAP ${aliveCap}`}>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--cyan)' }} />
+              Alive
+            </div>
+            <div className="stat__value stat__value--cyan">
+              {String(stats.alive).padStart(2, '0')}
+            </div>
+          </div>
+          <div className="statbar">
+            <div
+              className="statbar__fill"
+              style={{ width: `${Math.min(100, (stats.alive / aliveCap) * 100)}%` }}
             />
           </div>
-
-          <div className="control-row">
-            <button className="glass-btn" onClick={toggleRunning} data-variant={running ? undefined : 'accent'}>
-              {running ? '⏸ Pause' : '▶ Resume'}
-            </button>
-            <button className="glass-btn" onClick={changeSpeed}>⚡ ×{speed}</button>
-            <button className="glass-btn" onClick={addFoodBurst}>🌿 + Food</button>
-            <span className="control-spacer" />
-            <button className="glass-btn" onClick={exportLogs}>📝 Export logs</button>
-            <button className="glass-btn" onClick={saveState}>💾 Save state</button>
-            <button className="glass-btn" onClick={loadState}>📥 Load state</button>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--lime)' }} />
+              Food
+            </div>
+            <div className="stat__value stat__value--lime">{stats.food}</div>
           </div>
-        </div>
+          <div className="stat">
+            <div className="stat__label">Births</div>
+            <div className="stat__value stat__value--lime">{stats.born}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Deaths</div>
+            <div className="stat__value stat__value--red">{stats.died}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--amber)' }} />
+              Meals
+            </div>
+            <div className="stat__value stat__value--amber">{stats.totalEaten}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--magenta)' }} />
+              Food produced
+            </div>
+            <div className="stat__value stat__value--magenta">{stats.foodProduced}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--violet)' }} />
+              Nests
+            </div>
+            <div className="stat__value">
+              {stats.nests}{' '}
+              <span className="sim-panel__faint">({stats.nestsBuilt} built)</span>
+            </div>
+          </div>
+        </PanelShell>
 
-        <aside className="sim-side">
-          <section className="glass glass-blur side-card">
-            <h3 className="side-title">Statistics</h3>
-            <StatRow icon="👥" label="Alive" value={stats.alive} color="#60a5fa" />
-            <StatRow icon="🌿" label="Food" value={stats.food} color="#34d399" />
-            <StatRow icon="🐣" label="Births" value={stats.born} color="#f472b6" />
-            <StatRow icon="💀" label="Deaths" value={stats.died} color="#f87171" />
-            <StatRow icon="🍽" label="Meals" value={stats.totalEaten} color="#fbbf24" />
-            <StatRow icon="🌾" label="Food produced" value={stats.foodProduced} color="#c084fc" />
-            <StatRow icon="🛖" label="Nests" value={`${stats.nests} (${stats.nestsBuilt} built)`} color="#a78bfa" last />
-          </section>
-
-          <section className="glass glass-blur side-card roles-card">
-            <h3 className="side-title">Roles · click to add</h3>
-            {ROLES.map((role, i) => (
-              <div
+        <PanelShell title="Roles · click to add" code="RLS-02" accent="magenta">
+          {ROLES.map((role) => {
+            const color = hueToRgb(ROLE_HUE[role]);
+            const count =
+              role === 'farmer'
+                ? stats.farmers
+                : role === 'harvester'
+                  ? stats.harvesters
+                  : role === 'healer'
+                    ? stats.healers
+                    : stats.builders;
+            return (
+              <button
                 key={role}
-                className="role-row"
+                type="button"
+                className="sim-role"
                 onClick={() => addCreatureOfRole(role)}
-                style={{ borderBottom: i === ROLES.length - 1 ? 'none' : undefined }}
               >
                 <span
-                  className="role-swatch"
-                  style={{ background: hueToRgb(ROLE_HUE[role]), color: hueToRgb(ROLE_HUE[role]) }}
+                  className="sim-role__dot"
+                  style={{
+                    background: color,
+                    boxShadow: `0 0 10px ${color}, 0 0 4px ${color}`,
+                  }}
                 />
-                <div>
-                  <div className="role-name">
+                <div className="sim-role__body">
+                  <div className="sim-role__name">
                     {ROLE_ICON[role]} {ROLE_LABEL[role]}
                   </div>
-                  <div className="role-hint">{ROLE_DESC[role]}</div>
+                  <div className="sim-role__desc">{ROLE_DESC[role]}</div>
                 </div>
-                <div className="role-count" style={{ color: hueToRgb(ROLE_HUE[role]) }}>
-                  {role === 'farmer' ? stats.farmers
-                    : role === 'harvester' ? stats.harvesters
-                    : role === 'healer' ? stats.healers
-                    : stats.builders}
+                <div
+                  className="sim-role__count"
+                  style={{ color, textShadow: `0 0 8px ${color}` }}
+                >
+                  {count}
                 </div>
-              </div>
+              </button>
+            );
+          })}
+        </PanelShell>
+      </aside>
+
+      {/* Right rail — event log */}
+      <aside className="sim-screen__rail sim-screen__rail--right">
+        <PanelShell
+          title="Event Log"
+          code="LOG-03"
+          accent="cyan"
+          right={`${log.length} entries`}
+        >
+          <div className="sim-events">
+            {log.slice(0, 30).map((l, i) => (
+              <EventLine key={i} entry={l} tick={tick} />
             ))}
-          </section>
-
-          {selected && (
-            <section
-              className="glass glass-blur side-card"
-              style={{ borderColor: `hsla(${selected.hue},60%,55%,0.5)` }}
-            >
-              <div
-                className="selected-badge"
-                style={{ color: hueToRgb(ROLE_HUE[selected.role]) }}
-              >
-                {ROLE_ICON[selected.role]} {ROLE_LABEL[selected.role]}
-              </div>
-              <div className="selected-name" style={{ color: hueToRgb(selected.hue) }}>
-                {selected.name}
-              </div>
-              <div className="selected-stats">
-                <BarRow label="Energy" value={selected.energy} max={selected.maxEnergy} color={selected.energy > 40 ? '#34d399' : '#f87171'} />
-                <BarRow label="Stamina" value={selected.stamina} max={selected.maxStamina} color="#fbbf24" />
-                <Row k="Ability lvl" v={selected.abilityValue.toFixed(2)} />
-                <Row k="Speed" v={selected.speed.toFixed(2)} />
-                <Row k="Generation" v={selected.generation} />
-                <Row k="Children" v={selected.children} />
-                <Row k="Age" v={`${Math.floor(selected.age / 60)}s`} />
-                <Row k="State" v={
-                  <span style={{ color: stateColor(selected.state) }}>{stateLabel(selected.state)}</span>
-                } />
-              </div>
-            </section>
-          )}
-
-          <section className="glass glass-blur side-card events-card">
-            <h3 className="side-title">Events</h3>
-            <div className="events-scroll">
-              {log.slice(0, 30).map((l, i) => (
-                <div key={i} className="event-line" style={{ opacity: Math.max(0.55, 1 - i * 0.012) }}>
-                  {l.msg}
-                </div>
-              ))}
-              {log.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No events yet.</div>}
-            </div>
-          </section>
-        </aside>
-      </div>
+            {log.length === 0 && (
+              <div className="sim-events__empty">// no events yet</div>
+            )}
+          </div>
+        </PanelShell>
+      </aside>
     </div>
   );
 }
 
-function StatRow({ icon, label, value, color, last }: {
-  icon: string; label: string; value: number | string; color: string; last?: boolean;
+// ─────────────────────────────────────────────────────────────────────────
+// Helpers / sub-components
+// ─────────────────────────────────────────────────────────────────────────
+
+function PanelShell({
+  title,
+  code,
+  right,
+  accent = 'cyan',
+  children,
+}: {
+  title: string;
+  code?: string;
+  right?: string;
+  accent?: 'cyan' | 'magenta' | 'amber' | 'lime';
+  children: React.ReactNode;
 }) {
   return (
-    <div className="stat-row" style={{ borderBottom: last ? 'none' : undefined }}>
-      <span className="stat-label">{icon} {label}</span>
-      <span className="stat-value" style={{ color }}>{value}</span>
+    <div className="hud brackets sim-panel">
+      <span className="bk-tr" />
+      <span className="bk-bl" />
+      <div className="hud__header">
+        <div className="sim-panel__head-left">
+          <span
+            className="dot"
+            style={{
+              background: `var(--${accent})`,
+              boxShadow: `0 0 10px var(--${accent})`,
+            }}
+          />
+          <span>{title}</span>
+          {code && <span className="sim-panel__code">· {code}</span>}
+        </div>
+        {right && <div className="sim-panel__head-right">{right}</div>}
+      </div>
+      <div className="hud__body">{children}</div>
     </div>
   );
 }
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
-  return (
-    <div className="row">
-      <span className="row-k">{k}</span>
-      <span className="row-v">{v}</span>
-    </div>
-  );
-}
-
-function BarRow({ label, value, max, color }: {
-  label: string; value: number; max: number; color: string;
+function Diag({
+  label,
+  value,
+  color,
+  signed,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  signed?: boolean;
 }) {
-  const ratio = Math.max(0, Math.min(1, value / max));
+  const display = signed ? (value >= 0 ? `+${value}` : `${value}`) : value;
   return (
-    <div className="row" style={{ display: 'block' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-        <span className="row-k">{label}</span>
-        <span className="row-v">{Math.round(value)}</span>
-      </div>
-      <div className="bar">
-        <div className="bar-fill" style={{
-          background: color,
-          width: `${ratio * 100}%`,
-        }} />
+    <div className="sim-diag__cell">
+      <div className="tick sim-diag__label">{label}</div>
+      <div
+        className="sim-diag__value"
+        style={{ color, textShadow: `0 0 10px ${color}` }}
+      >
+        {display}
       </div>
     </div>
   );
+}
+
+function SelectionPanel({ creature }: { creature: Creature }) {
+  const color = hueToRgb(ROLE_HUE[creature.role]);
+  const energyRatio = Math.max(0, Math.min(1, creature.energy / creature.maxEnergy));
+  const staminaRatio = Math.max(0, Math.min(1, creature.stamina / creature.maxStamina));
+
+  return (
+    <PanelShell
+      title={`Entity · ${creature.name}`}
+      code={creature.id.slice(0, 4).toUpperCase()}
+      accent="magenta"
+    >
+      <div className="sim-sel__head">
+        <div
+          className="sim-sel__swatch"
+          style={{ background: color, color }}
+        />
+        <div>
+          <div className="sim-sel__name">{creature.name}</div>
+          <div className="sim-sel__role" style={{ color, textShadow: `0 0 6px ${color}` }}>
+            {ROLE_ICON[creature.role]} {ROLE_LABEL[creature.role]}
+          </div>
+        </div>
+      </div>
+      <div className="sim-sel__body">
+        <div className="stat">
+          <div className="stat__label">Energy</div>
+          <div className="stat__value stat__value--cyan">
+            {Math.round(creature.energy)} / {creature.maxEnergy}
+          </div>
+        </div>
+        <div className="statbar">
+          <div
+            className="statbar__fill"
+            style={{
+              width: `${energyRatio * 100}%`,
+              background: color,
+              boxShadow: `0 0 6px ${color}`,
+            }}
+          />
+        </div>
+        <div className="stat">
+          <div className="stat__label">Stamina</div>
+          <div className="stat__value stat__value--amber">
+            {Math.round(creature.stamina)} / {creature.maxStamina}
+          </div>
+        </div>
+        <div className="statbar">
+          <div
+            className="statbar__fill"
+            style={{
+              width: `${staminaRatio * 100}%`,
+              background: 'var(--amber)',
+              boxShadow: '0 0 6px var(--amber)',
+            }}
+          />
+        </div>
+        <div className="stat">
+          <div className="stat__label">Ability level</div>
+          <div className="stat__value">{creature.abilityValue.toFixed(2)}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Speed</div>
+          <div className="stat__value">{creature.speed.toFixed(2)}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Generation</div>
+          <div className="stat__value">{creature.generation}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Children</div>
+          <div className="stat__value">{creature.children}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Age</div>
+          <div className="stat__value">{Math.floor(creature.age / 60)}s</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">State</div>
+          <div className="stat__value" style={{ color: stateColor(creature.state) }}>
+            {stateLabel(creature.state)}
+          </div>
+        </div>
+      </div>
+    </PanelShell>
+  );
+}
+
+function EventLine({ entry, tick }: { entry: LogEntry; tick: number }) {
+  const icon = pickEventIcon(entry.msg);
+  const color = pickEventColor(entry.msg);
+  // Approximate tick-at-time display: logs are tagged with wall-clock ms
+  // (from addLog). Show current tick for the most recent entry; older ones
+  // tag with a decreasing synthetic offset so users get a rough ordering.
+  const displayTick = Math.max(0, tick);
+  return (
+    <div className="sim-event">
+      <span className="sim-event__t">T+{String(displayTick).padStart(4, '0')}</span>
+      <span
+        className="sim-event__icon"
+        style={{ color, textShadow: `0 0 6px ${color}` }}
+      >
+        {icon}
+      </span>
+      <span className="sim-event__text">{stripLeadingIcon(entry.msg)}</span>
+    </div>
+  );
+}
+
+function pickEventIcon(msg: string): string {
+  // Keep the original leading glyph when there is one.
+  const first = [...msg.trim()][0] ?? '·';
+  return first;
+}
+
+function stripLeadingIcon(msg: string): string {
+  // Drop the leading glyph + any following whitespace so the text column is clean.
+  const arr = [...msg.trim()];
+  if (arr.length === 0) return msg;
+  const rest = arr.slice(1).join('').trimStart();
+  return rest.length > 0 ? rest : msg;
+}
+
+function pickEventColor(msg: string): string {
+  if (msg.includes('🌱') || msg.includes('🌿')) return 'var(--lime)';
+  if (msg.includes('🍎') || msg.includes('🧺')) return 'var(--amber)';
+  if (msg.includes('💊')) return 'var(--cyan)';
+  if (msg.includes('🛖')) return 'var(--violet)';
+  if (msg.includes('🐣') || msg.includes('➕')) return 'var(--lime)';
+  if (msg.includes('💀')) return 'var(--red)';
+  if (msg.includes('💾') || msg.includes('📥')) return 'var(--magenta)';
+  if (msg.includes('⚠️')) return 'var(--amber)';
+  return 'var(--cyan)';
 }
 
 function stateLabel(s: Creature['state']): string {
@@ -1043,11 +1347,15 @@ function stateLabel(s: Creature['state']): string {
 
 function stateColor(s: Creature['state']): string {
   switch (s) {
-    case 'seek': return '#f87171';
-    case 'reproduce': return '#f472b6';
-    case 'eat': return '#34d399';
-    case 'rest': return '#cbd5e1';
-    case 'work': return '#fbbf24';
-    default: return '#94a3b8';
+    case 'seek': return 'var(--red)';
+    case 'reproduce': return 'var(--magenta)';
+    case 'eat': return 'var(--lime)';
+    case 'rest': return 'var(--text-1)';
+    case 'work': return 'var(--amber)';
+    default: return 'var(--text-2)';
   }
 }
+
+// Keep the lime phase-accent referenced so it's exported in the module graph
+// for any tooling that might follow constants; no runtime use.
+void PHASE_ACCENT;

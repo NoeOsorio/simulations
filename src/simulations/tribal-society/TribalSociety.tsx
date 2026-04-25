@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   ADULT_DURATION,
   CANVAS_H,
@@ -114,6 +113,7 @@ export default function TribalSociety() {
   });
   const [selected, setSelected] = useState<Creature | null>(null);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [tickDisplay, setTickDisplay] = useState(0);
 
   const selectedRef = useRef<Creature | null>(null);
   const logRef = useRef<LogEntry[]>([]);
@@ -493,24 +493,48 @@ export default function TribalSociety() {
       }
     };
 
-    // ----- Pre-rendered backdrop -----
+    // ----- Pre-rendered backdrop (Palantir HUD grid) -----
     const bgCanvas = document.createElement('canvas');
     bgCanvas.width = CANVAS_W;
     bgCanvas.height = CANVAS_H;
     const bgCtx = bgCanvas.getContext('2d')!;
-    const bgGrad = bgCtx.createLinearGradient(0, 0, 0, CANVAS_H);
-    bgGrad.addColorStop(0, '#0a1a2e');
-    bgGrad.addColorStop(0.5, '#0e2339');
-    bgGrad.addColorStop(1, '#0a1c2c');
+    // Radial dark-void fill
+    const bgGrad = bgCtx.createRadialGradient(
+      CANVAS_W / 2, CANVAS_H / 2, 0,
+      CANVAS_W / 2, CANVAS_H / 2, Math.max(CANVAS_W, CANVAS_H) * 0.7,
+    );
+    bgGrad.addColorStop(0, '#0c1420');
+    bgGrad.addColorStop(1, '#05070a');
     bgCtx.fillStyle = bgGrad;
     bgCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    bgCtx.fillStyle = 'rgba(120,200,255,0.06)';
-    for (let x = 20; x < CANVAS_W; x += 30) {
-      for (let y = 20; y < CANVAS_H; y += 30) {
-        bgCtx.beginPath();
-        bgCtx.arc(x, y, 1, 0, Math.PI * 2);
-        bgCtx.fill();
-      }
+    // Cyan 40px minor grid
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.06)';
+    bgCtx.lineWidth = 1;
+    for (let x = 0; x < CANVAS_W; x += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
+    }
+    for (let y = 0; y < CANVAS_H; y += 40) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
+    }
+    // Stronger 200px major grid
+    bgCtx.strokeStyle = 'rgba(0, 229, 255, 0.12)';
+    for (let x = 0; x < CANVAS_W; x += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(x + 0.5, 0);
+      bgCtx.lineTo(x + 0.5, CANVAS_H);
+      bgCtx.stroke();
+    }
+    for (let y = 0; y < CANVAS_H; y += 200) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, y + 0.5);
+      bgCtx.lineTo(CANVAS_W, y + 0.5);
+      bgCtx.stroke();
     }
 
     const drawFood = (f: Food, tick: number) => {
@@ -855,7 +879,19 @@ export default function TribalSociety() {
       for (const f of foodRef.current) drawFood(f, tick);
       for (const c of creaturesRef.current) drawCreature(c, tick);
 
+      // Corner tick marks (L brackets) on canvas edges
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,229,255,0.5)';
+      ctx.lineWidth = 1;
+      const tl = 10;
+      ctx.beginPath(); ctx.moveTo(0, tl); ctx.lineTo(0, 0); ctx.lineTo(tl, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(CANVAS_W - tl, 0); ctx.lineTo(CANVAS_W, 0); ctx.lineTo(CANVAS_W, tl); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, CANVAS_H - tl); ctx.lineTo(0, CANVAS_H); ctx.lineTo(tl, CANVAS_H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(CANVAS_W - tl, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H); ctx.lineTo(CANVAS_W, CANVAS_H - tl); ctx.stroke();
+      ctx.restore();
+
       if (tick % 30 === 0) {
+        setTickDisplay(tick);
         let children = 0, adults = 0, elders = 0;
         let farmers = 0, harvesters = 0, healers = 0, builders = 0, teachers = 0;
         for (const c of creaturesRef.current) {
@@ -945,6 +981,31 @@ export default function TribalSociety() {
     addLog('🌿 Food rain!');
   };
 
+  const resetSim = () => {
+    creaturesRef.current = buildInitialPopulation();
+    const initialFood: Food[] = [];
+    for (let i = 0; i < INITIAL_FOOD; i++) {
+      initialFood.push(createFood({ type: Math.random() < 0.6 ? 'herb' : 'fruit' }));
+    }
+    foodRef.current = initialFood;
+    nestsRef.current = [];
+    tickRef.current = 0;
+    statsRef.current = {
+      born: 0,
+      died: 0,
+      totalEaten: 0,
+      foodProduced: 0,
+      classesGiven: 0,
+      nestsBuilt: 0,
+    };
+    selectedRef.current = null;
+    setSelected(null);
+    setTickDisplay(0);
+    logRef.current = [];
+    setLog([]);
+    addLog('⟳ Simulation reset');
+  };
+
   const toggleRunning = () => {
     runningRef.current = !runningRef.current;
     setRunning((r) => !r);
@@ -1003,150 +1064,274 @@ export default function TribalSociety() {
     }
   };
 
+  const netDelta = stats.born - stats.died;
+
   return (
-    <div className="sim-page">
-      <Link to="/" className="back-link">← Back to menu</Link>
-
-      <header className="sim-header">
-        <div>
-          <span className="eyebrow mono">Phase 03</span>
-          <h1 className="sim-h1">
-            Tribal <span className="gradient-text">Society</span>
-          </h1>
-          <p className="muted sim-tag">
-            Five roles, specialized diets, ages, and teachers. Click a creature to inspect it.
-          </p>
+    <div className="sim-screen">
+      {/* LEFT — main column */}
+      <div className="sim-screen__main">
+        {/* Title */}
+        <div className="sim-title">
+          <div>
+            <div className="tick sim-title__eyebrow">▌ PHASE 03 · TRIBAL SOCIETY</div>
+            <h2 className="sim-title__h2">
+              Tribal <span className="sim-title__h2-gradient">Society</span>
+            </h2>
+            <p className="sim-title__desc">
+              Five roles, specialized diets, ages, and teachers. Click a creature to inspect it.
+            </p>
+          </div>
+          <div className="sim-title__tickrate">
+            <div className="tick sim-title__tickrate-label">Tick rate</div>
+            <div
+              className="sim-title__tickrate-value"
+              data-state={running ? 'running' : 'paused'}
+            >
+              {running ? `${speed.toFixed(1)}×` : 'PAUSED'}
+            </div>
+          </div>
         </div>
-      </header>
 
-      <div className="sim-layout">
-        <div className="sim-canvas-col">
-          <div className="canvas-wrap glass">
-            <canvas
-              ref={canvasRef}
-              width={CANVAS_W}
-              height={CANVAS_H}
-              onClick={handleCanvasClick}
-              className="sim-canvas"
+        {/* Viewport frame */}
+        <div className="hud brackets viewport-frame">
+          <span className="bk-tr" />
+          <span className="bk-bl" />
+          <div className="hud__header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="dot" />
+              <span>Live Viewport</span>
+              <span style={{ color: 'var(--text-3)' }}>· VPT-01</span>
+            </div>
+            <div style={{ display: 'flex', gap: 12, color: 'var(--text-2)' }}>
+              <span>GRID 40px</span>
+              <span style={{ color: 'var(--cyan)' }}>● REC</span>
+            </div>
+          </div>
+
+          <div className="viewport-frame__canvas-wrap">
+            <div className="viewport-frame__canvas-stage">
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_W}
+                height={CANVAS_H}
+                onClick={handleCanvasClick}
+                className="viewport-frame__canvas"
+              />
+              <div className="viewport-frame__overlay viewport-frame__overlay--tl">
+                00.00 · 00.00
+              </div>
+              <div className="viewport-frame__overlay viewport-frame__overlay--tr">
+                SECTOR · TRIBAL-07
+              </div>
+              <div className="viewport-frame__overlay viewport-frame__overlay--bl">
+                T + {String(tickDisplay).padStart(5, '0')}
+              </div>
+              <div className="viewport-frame__overlay viewport-frame__overlay--br">
+                LIVE · {String(stats.alive).padStart(2, '0')} entities
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="sim-controls">
+          <button
+            className={running ? 'btn' : 'btn btn--primary'}
+            onClick={toggleRunning}
+          >
+            {running ? '⏸ Pause' : '▶ Resume'}
+          </button>
+          <button className="btn" onClick={changeSpeed}>
+            ⚡ {speed}× → {speed === 4 ? '1' : speed === 2 ? '4' : '2'}×
+          </button>
+          <div className="vrule" />
+          <button className="btn" onClick={addChild}>+ Child</button>
+          <button className="btn" onClick={addAdult}>+ Adult</button>
+          <button className="btn" onClick={addFoodBurst}>+ Food</button>
+          <div className="vrule" />
+          <button className="btn" onClick={exportLogs}>⎘ Export logs</button>
+          <button className="btn" onClick={saveState}>◼ Save state</button>
+          <button className="btn" onClick={loadState}>◻ Load state</button>
+          <button
+            className="btn btn--danger"
+            onClick={resetSim}
+            style={{ marginLeft: 'auto' }}
+          >
+            ⟳ Reset
+          </button>
+        </div>
+
+        {/* Diagnostics strip */}
+        <div className="hud diag-strip">
+          <Diag label="Entities" value={stats.alive} color="cyan" />
+          <Diag label="Food on map" value={stats.food} color="lime" />
+          <Diag label="Births" value={stats.born} color="lime" />
+          <Diag label="Deaths" value={stats.died} color="red" />
+          <Diag
+            label="Net Δ"
+            value={netDelta >= 0 ? `+${netDelta}` : String(netDelta)}
+            color="magenta"
+          />
+        </div>
+      </div>
+
+      {/* LEFT rail — selection + population + roles */}
+      <aside className="sim-screen__rail sim-screen__rail--left">
+        <SelectionPanel selected={selected} />
+
+        <Panel title="Population" code="POP-01" accent="cyan" right={`CAP ${MAX_POPULATION}`}>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--cyan)' }} />
+              Alive
+            </div>
+            <div className="stat__value stat__value--cyan">
+              {String(stats.alive).padStart(2, '0')}
+            </div>
+          </div>
+          <div className="statbar">
+            <div
+              className="statbar__fill"
+              style={{ width: `${Math.min(100, (stats.alive / MAX_POPULATION) * 100)}%` }}
             />
           </div>
-
-          <div className="control-row">
-            <button className="glass-btn" onClick={toggleRunning} data-variant={running ? undefined : 'accent'}>
-              {running ? '⏸ Pause' : '▶ Resume'}
-            </button>
-            <button className="glass-btn" onClick={changeSpeed}>⚡ ×{speed}</button>
-            <button className="glass-btn" onClick={addChild}>👶 + Child</button>
-            <button className="glass-btn" onClick={addAdult}>🧑 + Adult</button>
-            <button className="glass-btn" onClick={addFoodBurst}>🌿 + Food</button>
-            <span className="control-spacer" />
-            <button className="glass-btn" onClick={exportLogs}>📝 Export logs</button>
-            <button className="glass-btn" onClick={saveState}>💾 Save state</button>
-            <button className="glass-btn" onClick={loadState}>📥 Load state</button>
+          <div className="stat">
+            <div className="stat__label">— Children</div>
+            <div className="stat__value">{stats.children}</div>
           </div>
-        </div>
+          <div className="stat">
+            <div className="stat__label">— Adults</div>
+            <div className="stat__value">{stats.adults}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">— Elders</div>
+            <div className="stat__value">{stats.elders}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Births</div>
+            <div className="stat__value stat__value--lime">{stats.born}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">Deaths</div>
+            <div className="stat__value stat__value--red">{stats.died}</div>
+          </div>
+        </Panel>
 
-        <aside className="sim-side">
-          <section className="glass glass-blur side-card">
-            <h3 className="side-title">Population · cap {MAX_POPULATION}</h3>
-            <StatRow icon="👥" label="Alive" value={stats.alive} color="#60a5fa" />
-            <StatRow icon="👶" label="Children" value={stats.children} color="#fbbf24" />
-            <StatRow icon="🧑" label="Adults" value={stats.adults} color="#60a5fa" />
-            <StatRow icon="👴" label="Elders" value={stats.elders} color="#cbd5e1" />
-            <StatRow icon="🐣" label="Births" value={stats.born} color="#f472b6" />
-            <StatRow icon="💀" label="Deaths" value={stats.died} color="#f87171" last />
-          </section>
-
-          <section className="glass glass-blur side-card">
-            <h3 className="side-title">Production</h3>
-            <StatRow icon="🌿" label="Food" value={stats.food} color="#34d399" />
-            <StatRow icon="🍽" label="Meals" value={stats.totalEaten} color="#fbbf24" />
-            <StatRow icon="🌾" label="Produced" value={stats.foodProduced} color="#c084fc" />
-            <StatRow icon="📚" label="Classes" value={stats.classesGiven} color="#ff9ed8" />
-            <StatRow icon="🛖" label="Nests" value={`${stats.nests} (${stats.nestsBuilt} built)`} color="#a78bfa" last />
-          </section>
-
-          <section className="glass glass-blur side-card roles-card">
-            <h3 className="side-title">Roles · adults &amp; elders</h3>
-            {ROLES.map((role, i) => (
-              <div
-                key={role}
-                className="role-row"
-                style={{ borderBottom: i === ROLES.length - 1 ? 'none' : undefined }}
-              >
-                <span
-                  className="role-swatch"
-                  style={{ background: hueToRgb(ROLE_HUE[role]), color: hueToRgb(ROLE_HUE[role]) }}
-                />
-                <div>
-                  <div className="role-name">
-                    {ROLE_ICON[role]} {ROLE_LABEL[role]}
-                  </div>
-                  <div className="role-hint">{ROLE_DESC[role]}</div>
-                </div>
-                <div className="role-count" style={{ color: hueToRgb(ROLE_HUE[role]) }}>
-                  {role === 'farmer' ? stats.farmers
-                    : role === 'harvester' ? stats.harvesters
-                    : role === 'healer' ? stats.healers
+        <Panel title="Roles · Adults & Elders" code="RLS-03" accent="magenta">
+          {ROLES.map((role) => {
+            const color = hueToRgb(ROLE_HUE[role]);
+            const count =
+              role === 'farmer' ? stats.farmers
+                : role === 'harvester' ? stats.harvesters
+                  : role === 'healer' ? stats.healers
                     : role === 'builder' ? stats.builders
-                    : stats.teachers}
-                </div>
-              </div>
-            ))}
-          </section>
-
-          {selected && (
-            <section
-              className="glass glass-blur side-card"
-              style={{ borderColor: `hsla(${selected.hue},60%,55%,0.5)` }}
-            >
-              <div
-                className="selected-badge"
-                style={{ color: selected.role ? hueToRgb(ROLE_HUE[selected.role]) : '#cbd5e1' }}
-              >
-                {stageLabel(selected)}
-              </div>
-              <div
-                className="selected-name"
-                style={{ color: selected.stage === 'child' ? hueToRgb(CHILD_HUE) : hueToRgb(selected.hue) }}
-              >
-                {selected.name}
-              </div>
-              <div className="selected-stats">
-                <BarRow label="Energy" value={selected.energy} max={selected.maxEnergy} color={selected.energy > 40 ? '#34d399' : '#f87171'} />
-                <BarRow label="Stamina" value={selected.stamina} max={selected.maxStamina} color="#fbbf24" />
-                {selected.stage === 'child' && (
-                  <BarRow
-                    label="Education"
-                    value={selected.education}
-                    max={EDUCATION_CAP}
-                    color="#ff9ed8"
+                      : stats.teachers;
+            return (
+              <div key={role} className="role-row">
+                <div className="role-row__left">
+                  <span
+                    className="role-row__dot"
+                    style={{ background: color, boxShadow: `0 0 10px ${color}, 0 0 4px ${color}` }}
                   />
-                )}
-                {selected.role && <Row k="Ability lvl" v={selected.abilityValue.toFixed(2)} />}
-                <Row k="Age" v={`${Math.floor(selected.age / 60)}s / ${Math.floor(selected.maxAge / 60)}s`} />
-                <Row k="Generation" v={selected.generation} />
-                <Row k="Children" v={selected.children} />
-                <Row k="State" v={
-                  <span style={{ color: stateColor(selected.state) }}>{stateLabel2(selected.state)}</span>
-                } />
-              </div>
-            </section>
-          )}
-
-          <section className="glass glass-blur side-card events-card">
-            <h3 className="side-title">Events</h3>
-            <div className="events-scroll">
-              {log.slice(0, 30).map((l, i) => (
-                <div key={i} className="event-line" style={{ opacity: Math.max(0.55, 1 - i * 0.012) }}>
-                  {l.msg}
+                  <div>
+                    <div className="role-row__name">{ROLE_LABEL[role]}</div>
+                    <div className="role-row__desc">{ROLE_DESC[role]}</div>
+                  </div>
                 </div>
-              ))}
-              {log.length === 0 && <div className="muted" style={{ fontSize: 12 }}>No events yet.</div>}
+                <div
+                  className="role-row__count"
+                  style={{ color, textShadow: `0 0 8px ${color}` }}
+                >
+                  {count}
+                </div>
+              </div>
+            );
+          })}
+        </Panel>
+      </aside>
+
+      {/* RIGHT rail — production + event log */}
+      <aside className="sim-screen__rail sim-screen__rail--right">
+        <Panel title="Production" code="PRD-02" accent="amber">
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--lime)' }} />
+              Food
             </div>
-          </section>
-        </aside>
-      </div>
+            <div className="stat__value stat__value--lime">{stats.food}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--amber)' }} />
+              Meals
+            </div>
+            <div className="stat__value stat__value--amber">{stats.totalEaten}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--magenta)' }} />
+              Produced
+            </div>
+            <div className="stat__value stat__value--magenta">{stats.foodProduced}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--cyan)' }} />
+              Classes
+            </div>
+            <div className="stat__value stat__value--cyan">{stats.classesGiven}</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label">
+              <span className="swatch" style={{ background: 'var(--violet)' }} />
+              Nests
+            </div>
+            <div className="stat__value stat__value--violet">
+              {stats.nests}{' '}
+              <span style={{ color: 'var(--text-3)' }}>({stats.nestsBuilt} built)</span>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel
+          title="Event Log"
+          code="LOG-04"
+          accent="cyan"
+          right={`${log.length} entries`}
+        >
+          <div className="events-scroll">
+            {log.length === 0 && (
+              <div style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>
+                // no events yet
+              </div>
+            )}
+            {log.map((l, i) => {
+              const kind = eventKind(l.msg);
+              const color = KIND_COLOR[kind];
+              const icon = eventIcon(l.msg);
+              return (
+                <div key={i} className="event-row">
+                  <span className="event-row__t">
+                    T+{String(Math.floor(tickDisplay - i * 30)).padStart(4, '0')}
+                  </span>
+                  <span
+                    className="event-row__icon"
+                    style={{ color, textShadow: `0 0 6px ${color}` }}
+                  >
+                    {icon}
+                  </span>
+                  <span
+                    className="event-row__text"
+                    style={{ color: kind === 'sys' ? 'var(--text-2)' : 'var(--text-1)' }}
+                  >
+                    {l.msg}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+      </aside>
     </div>
   );
 }
@@ -1154,68 +1339,274 @@ export default function TribalSociety() {
 // Silence unused-import noise when ADULT_DURATION is only documentation.
 void ADULT_DURATION;
 
-function StatRow({ icon, label, value, color, last }: {
-  icon: string; label: string; value: number | string; color: string; last?: boolean;
+// =============================================================
+// HUD PRIMITIVES (layout only — core styling lives in index.css)
+// =============================================================
+
+type Accent = 'cyan' | 'magenta' | 'amber' | 'lime' | 'violet';
+
+function Panel({
+  title,
+  code,
+  right,
+  children,
+  accent = 'cyan',
+}: {
+  title: string;
+  code?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  accent?: Accent;
 }) {
   return (
-    <div className="stat-row" style={{ borderBottom: last ? 'none' : undefined }}>
-      <span className="stat-label">{icon} {label}</span>
-      <span className="stat-value" style={{ color }}>{value}</span>
+    <div className="hud brackets">
+      <span className="bk-tr" />
+      <span className="bk-bl" />
+      <div className="hud__header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            className="dot"
+            style={{
+              background: `var(--${accent})`,
+              boxShadow: `0 0 10px var(--${accent})`,
+            }}
+          />
+          <span>{title}</span>
+          {code && <span style={{ color: 'var(--text-3)', marginLeft: 4 }}>· {code}</span>}
+        </div>
+        {right !== undefined && <div style={{ color: 'var(--text-2)' }}>{right}</div>}
+      </div>
+      <div className="hud__body">{children}</div>
     </div>
   );
 }
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
-  return (
-    <div className="row">
-      <span className="row-k">{k}</span>
-      <span className="row-v">{v}</span>
-    </div>
-  );
-}
-
-function BarRow({ label, value, max, color }: {
-  label: string; value: number; max: number; color: string;
+function Diag({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | string;
+  color: Accent | 'red';
 }) {
-  const ratio = Math.max(0, Math.min(1, value / max));
+  const colorVar = `var(--${color})`;
   return (
-    <div className="row" style={{ display: 'block' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-        <span className="row-k">{label}</span>
-        <span className="row-v">{Math.round(value * 100) / 100}</span>
-      </div>
-      <div className="bar">
-        <div className="bar-fill" style={{ background: color, width: `${ratio * 100}%` }} />
+    <div className="diag">
+      <div className="tick diag__label">{label}</div>
+      <div
+        className="diag__value"
+        style={{ color: colorVar, textShadow: `0 0 10px ${colorVar}` }}
+      >
+        {value}
       </div>
     </div>
   );
 }
 
-function stageLabel(c: Creature): string {
-  if (c.stage === 'child') return '👶 Child';
-  const roleBadge = c.role ? `${ROLE_ICON[c.role]} ${ROLE_LABEL[c.role]}` : '';
-  if (c.stage === 'elder') return `👴 Elder · ${roleBadge}`;
-  return `🧑 Adult · ${roleBadge}`;
+function StatBar({
+  value,
+  max,
+  color,
+}: {
+  value: number;
+  max: number;
+  color: string;
+}) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  return (
+    <div className="statbar">
+      <div
+        className="statbar__fill"
+        style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
+      />
+    </div>
+  );
 }
 
-function stateLabel2(s: Creature['state']): string {
+function SelectionPanel({ selected }: { selected: Creature | null }) {
+  if (!selected) {
+    return (
+      <Panel title="Inspector" code="INS-00" accent="magenta">
+        <div
+          style={{
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--text-3)',
+            padding: '8px 0',
+          }}
+        >
+          // click a creature on the grid to inspect
+        </div>
+      </Panel>
+    );
+  }
+
+  const roleColor = selected.role
+    ? hueToRgb(ROLE_HUE[selected.role])
+    : hueToRgb(CHILD_HUE);
+  const stageLabelText = selected.stage.toUpperCase();
+  const subtitle = selected.role
+    ? `${ROLE_LABEL[selected.role]} · ${stageLabelText}`
+    : `CHILD · ${stageLabelText}`;
+  const entityCode = selected.id.slice(0, 4).toUpperCase();
+
+  return (
+    <Panel title={`Entity · ${selected.name}`} code={entityCode} accent="magenta">
+      <div className="inspector-head">
+        <div
+          className="inspector-head__portrait"
+          style={{
+            background: roleColor,
+            boxShadow: `0 0 20px ${roleColor}, inset 0 0 10px rgba(255,255,255,0.4)`,
+          }}
+        />
+        <div>
+          <div className="inspector-head__name">{selected.name}</div>
+          <div
+            className="inspector-head__sub"
+            style={{ color: roleColor, textShadow: `0 0 6px ${roleColor}` }}
+          >
+            {subtitle}
+          </div>
+        </div>
+      </div>
+
+      <div className="inspector-body">
+        <div className="stat">
+          <div className="stat__label">Energy</div>
+          <div className="stat__value stat__value--cyan">
+            {Math.round(selected.energy)} / {selected.maxEnergy}
+          </div>
+        </div>
+        <StatBar
+          value={selected.energy}
+          max={selected.maxEnergy}
+          color={selected.energy > 40 ? 'var(--lime)' : 'var(--red)'}
+        />
+
+        <div className="stat">
+          <div className="stat__label">Stamina</div>
+          <div className="stat__value stat__value--amber">
+            {Math.round(selected.stamina)} / {selected.maxStamina}
+          </div>
+        </div>
+        <StatBar value={selected.stamina} max={selected.maxStamina} color="var(--amber)" />
+
+        {selected.stage === 'child' && (
+          <>
+            <div className="stat">
+              <div className="stat__label">Education</div>
+              <div className="stat__value stat__value--magenta">
+                {selected.education.toFixed(2)} / {EDUCATION_CAP.toFixed(2)}
+              </div>
+            </div>
+            <StatBar value={selected.education} max={EDUCATION_CAP} color="var(--magenta)" />
+          </>
+        )}
+
+        {selected.role && (
+          <div className="stat">
+            <div className="stat__label">Ability lvl</div>
+            <div className="stat__value">{selected.abilityValue.toFixed(2)}</div>
+          </div>
+        )}
+        <div className="stat">
+          <div className="stat__label">Age</div>
+          <div className="stat__value">
+            {Math.floor(selected.age / 60)}s / {Math.floor(selected.maxAge / 60)}s
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Generation</div>
+          <div className="stat__value">{selected.generation}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">Children</div>
+          <div className="stat__value">{selected.children}</div>
+        </div>
+        <div className="stat">
+          <div className="stat__label">State</div>
+          <div className="stat__value" style={{ color: stateColor(selected.state) }}>
+            {stateLabel(selected.state)}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+// =============================================================
+// Event-log color + icon heuristics
+// =============================================================
+type EventKind =
+  | 'sys'
+  | 'birth'
+  | 'death'
+  | 'herb'
+  | 'fruit'
+  | 'heal'
+  | 'build'
+  | 'teach'
+  | 'ascend';
+
+const KIND_COLOR: Record<EventKind, string> = {
+  sys: 'var(--cyan)',
+  birth: 'var(--lime)',
+  death: 'var(--red)',
+  herb: 'var(--lime)',
+  fruit: 'var(--amber)',
+  heal: 'var(--cyan)',
+  build: 'var(--violet)',
+  teach: 'var(--magenta)',
+  ascend: 'var(--cyan)',
+};
+
+function eventKind(msg: string): EventKind {
+  const m = msg.toLowerCase();
+  if (m.includes('died') || m.includes('💀')) return 'death';
+  if (m.includes('born') || m.includes('🐣') || m.includes('👶')) return 'birth';
+  if (m.includes('herb') || m.includes('plant') || m.includes('🌱') || m.includes('🌿')) return 'herb';
+  if (m.includes('fruit') || m.includes('apple') || m.includes('🍎') || m.includes('harvest')) return 'fruit';
+  if (m.includes('heal') || m.includes('💊')) return 'heal';
+  if (m.includes('built') || m.includes('nest') || m.includes('🛖')) return 'build';
+  if (m.includes('teach') || m.includes('taught') || m.includes('class') || m.includes('📚')) return 'teach';
+  if (m.includes('became') || m.includes('ascend') || m.includes('🎓') || m.includes('👴')) return 'ascend';
+  return 'sys';
+}
+
+function eventIcon(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('died') || m.includes('💀')) return '✕';
+  if (m.includes('born')) return '+';
+  if (m.includes('herb') || m.includes('plant')) return '✻';
+  if (m.includes('fruit') || m.includes('apple')) return '●';
+  if (m.includes('heal')) return '♥';
+  if (m.includes('built') || m.includes('nest')) return '▲';
+  if (m.includes('teach') || m.includes('taught') || m.includes('class')) return '✦';
+  if (m.includes('became') || m.includes('ascend')) return '↑';
+  if (m.includes('cap') || m.includes('⚠')) return '!';
+  return '▪';
+}
+
+function stateLabel(s: Creature['state']): string {
   switch (s) {
-    case 'seek': return '🔍 Seeking food';
-    case 'reproduce': return '💕 Reproducing';
-    case 'eat': return '🍽 Eating';
-    case 'rest': return '💤 Resting';
-    case 'work': return '⚙ Working';
-    default: return '🚶 Wandering';
+    case 'seek': return 'SEEKING FOOD';
+    case 'reproduce': return 'REPRODUCING';
+    case 'eat': return 'EATING';
+    case 'rest': return 'RESTING';
+    case 'work': return 'WORKING';
+    default: return 'WANDERING';
   }
 }
 
 function stateColor(s: Creature['state']): string {
   switch (s) {
-    case 'seek': return '#f87171';
-    case 'reproduce': return '#f472b6';
-    case 'eat': return '#34d399';
-    case 'rest': return '#cbd5e1';
-    case 'work': return '#fbbf24';
-    default: return '#94a3b8';
+    case 'seek': return 'var(--red)';
+    case 'reproduce': return 'var(--magenta)';
+    case 'eat': return 'var(--lime)';
+    case 'rest': return 'var(--text-2)';
+    case 'work': return 'var(--amber)';
+    default: return 'var(--text-1)';
   }
 }
