@@ -1,0 +1,18 @@
+/* ==============================================================
+   Shared keyframes used by HUD primitives across simulations.
+   ============================================================== */
+
+@keyframes sim-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+@keyframes sim-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes sim-blink-soft {
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 0.4; }
+}

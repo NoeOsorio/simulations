@@ -1,0 +1,66 @@
+/* ==============================================================
+   Shared canvas viewport ("LIVE VIEWPORT" card with corner overlays).
+   Standardized class name is `.sim-viewport` — Phase 4+ should use this
+   so SimulationViewer.tsx finds the fullscreen target on the first try.
+   ============================================================== */
+
+.sim-viewport {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-viewport__head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sim-viewport__head-left .sim-viewport__code {
+  color: var(--text-3);
+}
+
+.sim-viewport__head-right {
+  display: flex;
+  gap: 12px;
+  color: var(--text-2);
+}
+
+.sim-viewport__rec {
+  color: var(--cyan);
+}
+
+.sim-viewport__stage {
+  padding: 14px;
+  background: radial-gradient(ellipse at center, #0c1420 0%, #05070a 80%);
+}
+
+.sim-viewport__canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 800 / 520;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.sim-viewport__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.sim-viewport__overlay {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--text-2);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.sim-viewport__overlay--tl { top: 6px;    left: 10px; }
+.sim-viewport__overlay--tr { top: 6px;    right: 10px; color: var(--cyan); }
+.sim-viewport__overlay--bl { bottom: 6px; left: 10px; }
+.sim-viewport__overlay--br { bottom: 6px; right: 10px; }
