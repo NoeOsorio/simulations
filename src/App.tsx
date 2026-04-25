@@ -33,8 +33,16 @@ function TopNav() {
           className="topnav__brand"
           onClick={() => navigate('/')}
           style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }}
+          aria-label="Sim World — home"
         >
-          <div className="logo" />
+          <img
+            className="logo"
+            src="/logo.png"
+            width={24}
+            height={24}
+            alt=""
+            aria-hidden="true"
+          />
           <span>SIM·WORLD</span>
         </button>
         <span style={{ color: 'var(--text-3)' }}>│</span>

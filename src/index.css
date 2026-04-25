@@ -347,20 +347,16 @@ h1, h2, h3 {
   font-weight: 600;
 }
 .topnav__brand .logo {
-  width: 18px;
-  height: 18px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--cyan);
-  background: rgba(0, 229, 255, 0.1);
-  box-shadow: var(--glow-cyan);
-  position: relative;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.45));
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
-.topnav__brand .logo::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border: 1px solid var(--cyan);
+.topnav__brand:hover .logo {
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.85));
+  transform: rotate(-6deg);
 }
 .topnav__meta { display: flex; gap: 24px; color: var(--text-2); }
 .topnav__meta > div span { color: var(--text-1); }
