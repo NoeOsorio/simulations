@@ -356,7 +356,9 @@ export function createBaby(a: Creature, b: Creature): Creature {
     parentIds: [a.id, b.id],
     personality: inheritPersonality(a.personality, b.personality),
     generation: Math.max(a.generation, b.generation) + 1,
-    energy: 60,
+    // Babies are born with extra energy buffer — at 4× speed children
+    // can drain dangerously fast before parents bring the next meal home.
+    energy: 80,
     houseId: a.houseId ?? b.houseId,
   });
 }
@@ -443,24 +445,33 @@ export function buildInitialWorld(): {
 // ── Role assignment for kids ascending ────────────────────────────────────
 
 export function chooseRoleForNewAdult(child: Creature, creatures: Creature[]): Role {
-  const eligible = child.education >= SPECIALIST_EDUCATION_THRESHOLD ? ROLES : GENERALIST_ROLES;
-
-  const counts: Partial<Record<Role, number>> = {};
-  for (const r of eligible) counts[r] = 0;
+  // Count current adults and elders by role across the entire population.
+  const allCounts: Partial<Record<Role, number>> = {};
+  for (const r of ROLES) allCounts[r] = 0;
   for (const o of creatures) {
     if (o.stage === 'child') continue;
     if (!o.role) continue;
-    if (eligible.includes(o.role)) {
-      counts[o.role] = (counts[o.role] ?? 0) + 1;
-    }
+    allCounts[o.role] = (allCounts[o.role] ?? 0) + 1;
   }
 
+  // Specialist preservation: if any specialist role has no living adult,
+  // the next ascender takes that role regardless of their education.
+  // Without this floor, losing a healer/builder/teacher cascaded into
+  // permanent extinction of that role since uneducated kids can't take
+  // specialist work otherwise.
+  const missingSpecialist = SPECIALIST_ROLES.find((r) => (allCounts[r] ?? 0) === 0);
+  if (missingSpecialist) return missingSpecialist;
+
+  // Otherwise fall back to "rarest needed role among those the child is
+  // eligible for". Educated children can pick from all roles; uneducated
+  // ones are limited to generalist work.
+  const eligible = child.education >= SPECIALIST_EDUCATION_THRESHOLD ? ROLES : GENERALIST_ROLES;
   let minCount = Infinity;
   for (const r of eligible) {
-    const c = counts[r] ?? 0;
+    const c = allCounts[r] ?? 0;
     if (c < minCount) minCount = c;
   }
-  const candidates = eligible.filter((r) => (counts[r] ?? 0) === minCount);
+  const candidates = eligible.filter((r) => (allCounts[r] ?? 0) === minCount);
   return candidates[Math.floor(Math.random() * candidates.length)]!;
 }
 

@@ -311,13 +311,18 @@ export default function FamilyBonds(): React.ReactElement {
           }
 
           // ── Orphan check ──────────────────────────────────────────
-          if (c.stage === 'child' && c.age > 60) {
+          // Fires earlier (age > 30) so orphans can ascend before they
+          // starve, and ascends with a fresh energy boost so they don't
+          // die in the next few ticks anyway.
+          if (c.stage === 'child' && c.age > 30) {
             const [pa, pb] = c.parentIds;
             const motherDead = pa !== null && !creatures.some((o) => o.id === pa && o.energy > 0);
             const fatherDead = pb !== null && !creatures.some((o) => o.id === pb && o.energy > 0);
             const noParents = (pa === null || motherDead) && (pb === null || fatherDead);
             if (noParents && (pa !== null || pb !== null)) {
               ascendToAdult(c, creatures);
+              c.energy = Math.max(c.energy, 70);
+              c.stamina = Math.max(c.stamina, 60);
               addLog(`${c.name} was orphaned and grew up early`, hueToRgb(c.hue));
             }
           }
@@ -376,7 +381,11 @@ export default function FamilyBonds(): React.ReactElement {
               continue;
             }
 
-            // Default: wander around home within radius.
+            // Default: wander around home within radius. While at home,
+            // pick up a tiny amount of education from any roled adult
+            // present — parents teaching their own kids by example. This
+            // ensures children can still eventually qualify for specialist
+            // work even when no teacher is alive in the world.
             if (home) {
               const d = dist(c, home);
               if (d > CHILD_HOME_RADIUS) {
@@ -385,6 +394,15 @@ export default function FamilyBonds(): React.ReactElement {
               } else {
                 c.state = 'home';
                 wanderStep(c);
+                if (c.education < EDUCATION_CAP) {
+                  const teacherNearby = creatures.some((o) =>
+                    o !== c && o.role && o.stage !== 'child' &&
+                    dist(o, home) < home.radius,
+                  );
+                  if (teacherNearby) {
+                    c.education = Math.min(EDUCATION_CAP, c.education + 0.0002);
+                  }
+                }
               }
             } else {
               wanderStep(c);
@@ -525,10 +543,12 @@ export default function FamilyBonds(): React.ReactElement {
             continue;
           }
 
-          // Priority 3: reproduction with partner. This goes BEFORE foraging
-          // on purpose — partnered adults that are home and ready should
-          // mate before going out for groceries; otherwise the family pantry
-          // permanently outranks family-making and births dry up.
+          // Priority 3: reproduction with partner. Goes BEFORE foraging so
+          // couples don't permanently get distracted by groceries — but
+          // GATED on the family pantry having at least a couple of meals
+          // stored. Otherwise mate-eat-mate cycles drain the inventory and
+          // children at home starve before adults restock.
+          const familyFoodReserve = home ? home.raw + home.cooked : 0;
           if (
             c.partnerId &&
             c.energy >= REPRODUCE_ENERGY &&
@@ -536,7 +556,8 @@ export default function FamilyBonds(): React.ReactElement {
             tick - c.lastReproduceTick > REPRODUCE_COOLDOWN &&
             c.stage === 'adult' &&
             creatures.length < MAX_POPULATION &&
-            home
+            home &&
+            familyFoodReserve >= 2
           ) {
             const partner = findCreature(c.partnerId, creatures);
             if (
