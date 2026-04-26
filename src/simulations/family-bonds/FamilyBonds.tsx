@@ -453,7 +453,21 @@ export default function FamilyBonds(): React.ReactElement {
                   continue;
                 }
               }
-              // Nothing to do — wait it out.
+              // Last resort: go find food in the world directly. Eat it
+              // on the spot instead of carrying — survival > family pantry.
+              const fEmergency = nearest(c, food);
+              if (fEmergency) {
+                if (dist(c, fEmergency) < c.size + fEmergency.size + 3) {
+                  c.energy = Math.min(c.maxEnergy, c.energy + fEmergency.energy);
+                  c.state = 'eat';
+                  foodRef.current = food.filter((x) => x !== fEmergency);
+                } else {
+                  c.state = 'forage';
+                  stepToward(c, fEmergency);
+                }
+                continue;
+              }
+              // Truly nothing nearby. Rest and hope a farmer shows up.
               c.state = 'rest';
               wanderStep(c);
               continue;
@@ -511,31 +525,10 @@ export default function FamilyBonds(): React.ReactElement {
             continue;
           }
 
-          // Priority 3: family pantry low — forage.
-          const familyRaw = home?.raw ?? 0;
-          if (
-            home &&
-            familyRaw < FORAGE_TRIGGER_RAW &&
-            c.carrying < CARRY_CAPACITY &&
-            c.stamina > LOW_STAMINA &&
-            c.stage !== 'elder'
-          ) {
-            const f = nearest(c, food);
-            if (f) {
-              if (dist(c, f) < c.size + f.size + 3) {
-                c.carrying = Math.min(CARRY_CAPACITY, c.carrying + 1);
-                foodRef.current = food.filter((x) => x !== f);
-                c.state = 'forage';
-              } else {
-                c.state = 'forage';
-                stepToward(c, f);
-              }
-              continue;
-            }
-            // No food in the world right now — fall through to other behaviors.
-          }
-
-          // Priority 4: reproduction with partner.
+          // Priority 3: reproduction with partner. This goes BEFORE foraging
+          // on purpose — partnered adults that are home and ready should
+          // mate before going out for groceries; otherwise the family pantry
+          // permanently outranks family-making and births dry up.
           if (
             c.partnerId &&
             c.energy >= REPRODUCE_ENERGY &&
@@ -584,7 +577,10 @@ export default function FamilyBonds(): React.ReactElement {
             }
           }
 
-          // Priority 5: courtship (singles only).
+          // Priority 4: courtship (singles only). Above foraging on
+          // purpose — without this, single adults always get distracted
+          // grocery-running and never form pairs, freezing population
+          // growth at the initial four couples.
           if (
             !c.partnerId &&
             c.stage === 'adult' &&
@@ -634,18 +630,25 @@ export default function FamilyBonds(): React.ReactElement {
                     if (accept) {
                       c.partnerId = best.id;
                       best.partnerId = c.id;
-                      // Move both into the closer of the two houses.
+                      // Pick a target house: prefer an empty one nearby
+                      // (so existing solo households actually get used),
+                      // otherwise the closer of the two existing homes.
+                      const empty = houses
+                        .filter((h) => h.residentIds.length === 0)
+                        .sort((h1, h2) => dist(c, h1) - dist(c, h2));
                       const ha = findHouse(c.houseId, houses);
                       const hb = findHouse(best.houseId, houses);
                       const targetH =
-                        ha && hb
-                          ? (dist(c, ha) <= dist(c, hb) ? ha : hb)
-                          : (ha ?? hb);
+                        empty[0] && (ha && dist(c, empty[0]) < dist(c, ha) * 1.2 ? empty[0] : (empty[0] ?? null)) ||
+                        (ha && hb ? (dist(c, ha) <= dist(c, hb) ? ha : hb) : (ha ?? hb));
                       if (targetH) {
+                        // Remove both from any prior house residency.
+                        for (const h of houses) {
+                          h.residentIds = h.residentIds.filter((id) => id !== c.id && id !== best.id);
+                        }
                         c.houseId = targetH.id;
                         best.houseId = targetH.id;
-                        if (!targetH.residentIds.includes(c.id)) targetH.residentIds.push(c.id);
-                        if (!targetH.residentIds.includes(best.id)) targetH.residentIds.push(best.id);
+                        targetH.residentIds.push(c.id, best.id);
                       }
                       c.bonds = {};
                       best.bonds = {};
@@ -669,6 +672,32 @@ export default function FamilyBonds(): React.ReactElement {
                 continue;
               }
             }
+          }
+
+          // Priority 5: family pantry low — forage. Couples that have
+          // already mated and singles that have no candidate near them
+          // fall here.
+          const familyRaw = home?.raw ?? 0;
+          if (
+            home &&
+            familyRaw < FORAGE_TRIGGER_RAW &&
+            c.carrying < CARRY_CAPACITY &&
+            c.stamina > LOW_STAMINA &&
+            c.stage !== 'elder'
+          ) {
+            const f = nearest(c, food);
+            if (f) {
+              if (dist(c, f) < c.size + f.size + 3) {
+                c.carrying = Math.min(CARRY_CAPACITY, c.carrying + 1);
+                foodRef.current = food.filter((x) => x !== f);
+                c.state = 'forage';
+              } else {
+                c.state = 'forage';
+                stepToward(c, f);
+              }
+              continue;
+            }
+            // No food in the world right now — fall through to other behaviors.
           }
 
           // Priority 6: stamina low — rest.
@@ -765,19 +794,25 @@ export default function FamilyBonds(): React.ReactElement {
           break;
         }
         case 'healer': {
-          // Find lowest-energy creature within range, donate energy.
+          // Healing is a deliberate, costly act: it drains the healer's
+          // work bar (stamina) and they must rest before doing it again.
+          // This stops the healer from dominating the event log and makes
+          // each heal feel like a real intervention.
           if (c.abilityCooldown > 0) break;
+          if (c.stamina < 28) break; // Too tired — rest first.
+
           const target = nearest(c, creatures, (o) =>
-            o !== c && o.energy < 60 && o.energy > 0 && dist(c, o) < 220,
+            o !== c && o.energy < 55 && o.energy > 0 && dist(c, o) < 220,
           );
           if (target) {
             const d = dist(c, target);
             if (d > 30) {
               stepToward(c, target);
             } else {
-              const heal = 8 * c.abilityValue;
+              const heal = 12 * c.abilityValue;
               target.energy = Math.min(target.maxEnergy, target.energy + heal);
-              c.energy -= 2;
+              c.energy -= 4;
+              c.stamina = Math.max(0, c.stamina - 25); // The big change.
               c.abilityCooldown = abilityCooldownTicks('healer', c.abilityValue);
               addLog(`${c.name} healed ${target.name} (+${Math.round(heal)})`, hueToRgb(c.hue));
             }
@@ -785,27 +820,50 @@ export default function FamilyBonds(): React.ReactElement {
           break;
         }
         case 'builder': {
-          // Build a new house if population is growing past existing housing.
+          // Build a new house only when there's actual housing pressure, and
+          // place it where the map is sparsest so houses don't cluster around
+          // the builder's own corner.
           const last = lastBuildRef.current[c.id] ?? -10000;
           if (tick - last < 60 * 30) break; // 30s minimum between builds
           const adultsCount = creatures.filter((o) => o.stage === 'adult').length;
           const housesCount = houses.length;
           const schoolsCount = schools.length;
-          // House if more couples than houses (very rough heuristic).
           const childrenCount = creatures.filter((o) => o.stage === 'child').length;
-          const wantHouse = adultsCount > housesCount * 2;
+
+          // Don't build extra houses if a substantial chunk are sitting empty.
+          const emptyHouses = houses.filter((h) => h.residentIds.length === 0).length;
+          const wantHouse = adultsCount > housesCount * 2 && emptyHouses < 2;
           const wantSchool = childrenCount > schoolsCount * 3;
+
+          // Pick the sparsest spot on a coarse grid as the build target.
+          const pickSparseSpot = (others: { x: number; y: number }[]): { x: number; y: number } => {
+            let bestX = c.x, bestY = c.y, bestD = 0;
+            for (let gx = 100; gx <= CANVAS_W - 100; gx += 80) {
+              for (let gy = 100; gy <= CANVAS_H - 100; gy += 80) {
+                let minD = Infinity;
+                for (const o of others) {
+                  const d = Math.hypot(gx - o.x, gy - o.y);
+                  if (d < minD) minD = d;
+                }
+                if (minD > bestD) {
+                  bestD = minD;
+                  bestX = gx;
+                  bestY = gy;
+                }
+              }
+            }
+            return { x: bestX, y: bestY };
+          };
+
           if (wantHouse) {
-            const x = clampToCanvas(c.x + (Math.random() - 0.5) * 200);
-            const y = clampToCanvasY(c.y + (Math.random() - 0.5) * 200);
-            houses.push(createHouse(c.id, x, y, tick));
+            const spot = pickSparseSpot(houses);
+            houses.push(createHouse(c.id, spot.x, spot.y, tick));
             lastBuildRef.current[c.id] = tick;
             statsRef.current.housesBuilt++;
             addLog(`${c.name} built a new house`, hueToRgb(c.hue));
           } else if (wantSchool) {
-            const x = clampToCanvas(c.x + (Math.random() - 0.5) * 200);
-            const y = clampToCanvasY(c.y + (Math.random() - 0.5) * 200);
-            schools.push(createSchool(c.id, x, y, tick));
+            const spot = pickSparseSpot([...houses, ...schools]);
+            schools.push(createSchool(c.id, spot.x, spot.y, tick));
             lastBuildRef.current[c.id] = tick;
             statsRef.current.schoolsBuilt++;
             addLog(`${c.name} built a school`, hueToRgb(c.hue));
@@ -841,9 +899,6 @@ export default function FamilyBonds(): React.ReactElement {
         }
       }
     };
-
-    const clampToCanvas = (x: number) => Math.max(40, Math.min(CANVAS_W - 40, x));
-    const clampToCanvasY = (y: number) => Math.max(40, Math.min(CANVAS_H - 40, y));
 
     // ──────────────────────────────────────────────────────────────────
     // RENDER
@@ -1085,14 +1140,18 @@ export default function FamilyBonds(): React.ReactElement {
   }, [addLog]);
 
   // ── Controls ──────────────────────────────────────────────────────────
+  // These use functional setState so rapid double-clicks actually cycle.
+  // Closure-captured state was making consecutive clicks look like no-ops.
   const togglePause = () => {
     runningRef.current = !runningRef.current;
     setRunning(runningRef.current);
   };
   const cycleSpeed = () => {
-    const next = speed === 1 ? 2 : speed === 2 ? 4 : 1;
-    speedRef.current = next;
-    setSpeed(next);
+    setSpeed((prev) => {
+      const next = prev === 1 ? 2 : prev === 2 ? 4 : 1;
+      speedRef.current = next;
+      return next;
+    });
   };
   const addCreature = () => {
     creaturesRef.current.push(createCreature({

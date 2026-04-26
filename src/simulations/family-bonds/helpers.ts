@@ -51,11 +51,12 @@ export const ELDER_PRODUCTION_MULT = 0.5;
 export const ELDER_SIZE_MULT = 0.92;
 
 // ── Reproduction ──────────────────────────────────────────────────────────
-export const REPRODUCE_ENERGY = 62;
-export const REPRODUCE_STAMINA = 30;
-export const REPRODUCE_COST_ENERGY = 24;
-export const REPRODUCE_COST_STAMINA = 18;
-export const REPRODUCE_COOLDOWN = 600;
+export const REPRODUCE_ENERGY = 60;
+export const REPRODUCE_STAMINA = 28;
+export const REPRODUCE_COST_ENERGY = 22;
+export const REPRODUCE_COST_STAMINA = 16;
+/** Ticks of cooldown after a successful reproduction (per parent). */
+export const REPRODUCE_COOLDOWN = 900;
 export const MATE_CONTACT_RADIUS = 60;
 
 // ── Bond / courtship ──────────────────────────────────────────────────────
@@ -379,11 +380,13 @@ export function buildInitialWorld(): {
   ];
 
   // 8 adult roles spread across the 4 families. Each row = a couple.
+  // Builders are placed on a diagonal (NW + SE) so new houses get built on
+  // both sides of the map instead of clustering on one side.
   const couples: [Role, Role][] = [
-    ['farmer', 'cocinero'],
-    ['farmer', 'builder'],
-    ['cocinero', 'teacher'],
-    ['healer', 'builder'],
+    ['farmer', 'builder'],     // NW
+    ['cocinero', 'teacher'],   // NE
+    ['healer', 'cocinero'],    // SW
+    ['farmer', 'builder'],     // SE
   ];
 
   for (let f = 0; f < INITIAL_FAMILIES; f++) {
