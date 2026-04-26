@@ -333,21 +333,46 @@ export default function FamilyBonds(): React.ReactElement {
           // CHILDREN: stay near home, eat from inventory, optionally go to school.
           if (c.stage === 'child') {
             if (c.energy < HUNGER_THRESHOLD && home) {
-              if (dist(c, home) > home.radius - 5) {
-                // Walk back to home.
-                c.state = 'return';
-                stepToward(c, home);
-              } else if (home.cooked > 0) {
-                // Eat cooked.
+              const atHome = dist(c, home) < home.radius - 5;
+
+              // First try: eat from family inventory if we're already home.
+              if (atHome && home.cooked > 0) {
                 home.cooked -= 1;
                 c.energy = Math.min(c.maxEnergy, c.energy + COOKED_FOOD_ENERGY);
                 c.state = 'eat';
-              } else if (home.raw > 0) {
+                continue;
+              }
+              if (atHome && home.raw > 0) {
                 home.raw -= 1;
                 c.energy = Math.min(c.maxEnergy, c.energy + FOOD_BASE_ENERGY);
                 c.state = 'eat';
+                continue;
+              }
+
+              // Self-rescue: forage within the home radius. Children aren't
+              // helpless when the family pantry is empty — they can walk a
+              // little and eat what they find as long as they don't stray
+              // past CHILD_HOME_RADIUS from home.
+              const reachable = food.filter((f) => dist(home, f) < CHILD_HOME_RADIUS);
+              const closest = nearest(c, reachable);
+              if (closest) {
+                if (dist(c, closest) < c.size + closest.size + 3) {
+                  c.energy = Math.min(c.maxEnergy, c.energy + closest.energy);
+                  c.state = 'eat';
+                  foodRef.current = food.filter((x) => x !== closest);
+                } else {
+                  c.state = 'forage';
+                  stepToward(c, closest);
+                }
+                continue;
+              }
+
+              // Nothing in radius. If far from home, walk back; otherwise
+              // wait it out.
+              if (!atHome) {
+                c.state = 'return';
+                stepToward(c, home);
               } else {
-                // Wait at home; nothing to eat.
                 c.state = 'home';
                 wanderStep(c);
               }
@@ -544,11 +569,10 @@ export default function FamilyBonds(): React.ReactElement {
           }
 
           // Priority 3: reproduction with partner. Goes BEFORE foraging so
-          // couples don't permanently get distracted by groceries — but
-          // GATED on the family pantry having at least a couple of meals
-          // stored. Otherwise mate-eat-mate cycles drain the inventory and
-          // children at home starve before adults restock.
-          const familyFoodReserve = home ? home.raw + home.cooked : 0;
+          // couples don't permanently get distracted by groceries.
+          // Children are now self-sufficient foragers within their home
+          // radius (see child block below), so a temporarily empty pantry
+          // doesn't starve the kids — no gating needed here.
           if (
             c.partnerId &&
             c.energy >= REPRODUCE_ENERGY &&
@@ -556,8 +580,7 @@ export default function FamilyBonds(): React.ReactElement {
             tick - c.lastReproduceTick > REPRODUCE_COOLDOWN &&
             c.stage === 'adult' &&
             creatures.length < MAX_POPULATION &&
-            home &&
-            familyFoodReserve >= 2
+            home
           ) {
             const partner = findCreature(c.partnerId, creatures);
             if (
