@@ -597,9 +597,17 @@ export default function FamilyBonds(): React.ReactElement {
                 continue;
               }
               if (dph > home.radius - 5) {
-                // Wait — partner not yet here.
+                // Wait at home for the partner to arrive. Critically, do
+                // NOT wanderStep here — random drift was carrying the
+                // waiting partner back out of the radius before the other
+                // arrived, so neither of them was ever home at the same
+                // tick and reproduction never fired. Damp velocity to a
+                // stop instead.
                 c.state = 'reproduce';
-                wanderStep(c);
+                c.vx *= 0.7;
+                c.vy *= 0.7;
+                c.x += c.vx;
+                c.y += c.vy;
                 continue;
               }
               // Both inside the same house. Mate.
