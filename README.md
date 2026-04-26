@@ -16,7 +16,8 @@
 [**Live demo**](https://simulations.noeosorio.com) &nbsp;·&nbsp;
 [**Phase 01 — Micro Ecosystem**](src/simulations/micro-ecosystem/README.md) &nbsp;·&nbsp;
 [**Phase 02 — Skill Ecosystem**](src/simulations/skill-ecosystem/README.md) &nbsp;·&nbsp;
-[**Phase 03 — Tribal Society**](src/simulations/tribal-society/README.md)
+[**Phase 03 — Tribal Society**](src/simulations/tribal-society/README.md) &nbsp;·&nbsp;
+[**Phase 04 — Family Bonds**](src/simulations/family-bonds/README.md)
 
 </div>
 
@@ -29,7 +30,7 @@
 The UI is a dark, Palantir-inspired HUD: neon cyan / magenta / amber accents, mono-typography, corner brackets, and a faint grid backdrop.
 
 ```text
-phase 01 ──●───● phase 02 ──●───● phase 03 ──◌───◌ phase 04 (coming soon)
+phase 01 ──●───● phase 02 ──●───● phase 03 ──●───● phase 04 ──◌───◌ phase 05 (coming soon)
 ```
 
 ---
@@ -41,7 +42,8 @@ phase 01 ──●───● phase 02 ──●───● phase 03 ──◌
 | **01** | [**Micro Ecosystem**](src/simulations/micro-ecosystem/) | Tiny creatures wander, eat, and reproduce. First spark of organic life. | ![available](https://img.shields.io/badge/-available-00e5ff?labelColor=0a0e14) |
 | **02** | [**Skill Ecosystem**](src/simulations/skill-ecosystem/) | Four roles — farmer, harvester, healer, builder — with inheritable skills. | ![available](https://img.shields.io/badge/-available-a8ff2b?labelColor=0a0e14) |
 | **03** | [**Tribal Society**](src/simulations/tribal-society/) | Nobody is self-sufficient. Ages, teachers, and role-learning. | ![available](https://img.shields.io/badge/-available-ff2bd6?labelColor=0a0e14) |
-| **04** | Predator & Prey | First food chains, senses, survival pressure. | ![planned](https://img.shields.io/badge/-planned-6b7d93?labelColor=0a0e14) |
+| **04** | [**Family Bonds**](src/simulations/family-bonds/) | Personalities, courtship, monogamy, family inventories, schools. | ![available](https://img.shields.io/badge/-available-ffb020?labelColor=0a0e14) |
+| **05** | Coming soon | The next pressure. | ![planned](https://img.shields.io/badge/-planned-6b7d93?labelColor=0a0e14) |
 
 > Each simulation folder contains a plain-English `README.md` describing what that phase models.
 

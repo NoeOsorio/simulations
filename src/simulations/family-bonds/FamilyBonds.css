@@ -1,0 +1,9 @@
+@import '../../styles/index.css';
+
+/* Phase 04 — Family Bonds.
+   Visual identity: warm magenta accent for relationships + amber for hearth. */
+.family-bonds-root {
+  --phase-accent: var(--magenta);
+  --phase-accent-from: #ff2bd6;
+  --phase-accent-to: #ffb020;
+}
