@@ -1,0 +1,168 @@
+/* ==============================================================
+   Shared panels: rail panels, controls row, diagnostics strip,
+   event log, and the selected-creature inspector.
+   ============================================================== */
+
+/* ── Rail panels ──────────────────────────────────────────────── */
+.sim-panel {
+  position: relative;
+}
+
+.sim-panel__code {
+  color: var(--text-3);
+  margin-left: 4px;
+}
+
+.sim-panel__head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-panel__head-right {
+  color: var(--text-2);
+}
+
+/* ── Controls row ─────────────────────────────────────────────── */
+.sim-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sim-controls__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line-2);
+  margin: 4px 6px;
+}
+
+.sim-controls__spacer {
+  margin-left: auto;
+}
+
+/* ── Diagnostics strip ────────────────────────────────────────── */
+.sim-diag {
+  margin-top: 14px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+.sim-diag__cell {
+  min-width: 0;
+}
+
+.sim-diag__label {
+  margin-bottom: 3px;
+}
+
+.sim-diag__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Event log ────────────────────────────────────────────────── */
+.sim-events {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sim-event {
+  display: grid;
+  grid-template-columns: 42px 14px 1fr;
+  gap: 6px;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-1);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+}
+
+.sim-event:last-child {
+  border-bottom: none;
+}
+
+.sim-event__t {
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.sim-event__icon {
+  text-align: center;
+}
+
+.sim-event__text {
+  word-break: break-word;
+}
+
+.sim-events__empty {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 0;
+}
+
+/* ── Selection / inspector panel ──────────────────────────────── */
+.sim-sel__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--divider);
+}
+
+.sim-sel__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 0 20px currentColor, inset 0 0 10px rgba(255, 255, 255, 0.4);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sim-sel__swatch::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sim-sel__name {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+
+.sim-sel__role {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sim-sel__body {
+  padding-top: 10px;
+}
+
+.sim-sel__state-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.25);
+}

@@ -1,0 +1,14 @@
+/**
+ * Barrel for the shared simulation stylesheets. New phases can either
+ * import this file once for the full kit, or pick the sheets they
+ * actually use to keep their bundle smaller.
+ *
+ * Tokens (--cyan, --surface, etc.) and global primitives (.hud, .btn,
+ * .chip) still live in src/index.css and are loaded application-wide,
+ * so referencing them from these sheets always works.
+ */
+@import './layout.css';
+@import './title.css';
+@import './viewport.css';
+@import './panels.css';
+@import './animations.css';
