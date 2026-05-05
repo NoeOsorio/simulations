@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import MicroEcosystem from './micro-ecosystem/MicroEcosystem';
 import SkillEcosystem from './skill-ecosystem/SkillEcosystem';
 import TribalSociety from './tribal-society/TribalSociety';
+import FamilyBonds from './family-bonds/FamilyBonds';
 
 export interface SimulationMeta {
   id: string;
@@ -61,5 +62,18 @@ export const simulations: SimulationMeta[] = [
     path: '/tribal-society',
     status: 'available',
     Component: TribalSociety,
+  },
+  {
+    id: 'family-bonds',
+    phase: 4,
+    title: 'Phase 4 — Family Bonds',
+    shortTitle: 'Family Bonds',
+    tagline: 'Couples form, families grow, only your partner can be the parent of your children.',
+    description:
+      'Each creature carries three inheritable personality traits and picks a single partner for life. Children stay near their family\'s house, eat from the family pantry, and grow up either at home or at a school. Cocineros turn raw food into cooked at home; other families barter raw for cooked. The first phase where individuals are not interchangeable.',
+    icon: '🏠',
+    path: '/family-bonds',
+    status: 'available',
+    Component: FamilyBonds,
   },
 ];
