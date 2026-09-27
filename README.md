@@ -1,142 +1,95 @@
 <div align="center">
 
-<img src="public/logo.png" alt="Sim World" width="160" height="160" />
+<!-- TODO: create docs/banner-dark.png and docs/banner-light.png (1280x640) using the noeosorio.com palette (background #18181b, accent #bef264 → #10b981), then uncomment
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.png">
+  <img alt="Sim World: watch organic life evolve, one phase at a time" src="docs/banner-light.png" width="600">
+</picture>
+-->
+
+<img src="public/logo.png" alt="Sim World logo" width="120" height="120" />
 
 # Sim World
 
-#### _A phased simulation of organic life — rendered as a Palantir-style HUD._
+**Watch organic life evolve in your browser, one phase at a time: from a primordial soup to families with personalities.**
 
-[![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=fff&labelColor=0a0e14)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=fff&labelColor=0a0e14)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=fff&labelColor=0a0e14)](https://vitejs.dev/)
-[![ESLint](https://img.shields.io/badge/ESLint-9-4b32c3?logo=eslint&logoColor=fff&labelColor=0a0e14)](https://eslint.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-00e5ff?labelColor=0a0e14)](#license)
-[![Made by Noe Osorio](https://img.shields.io/badge/Made_by-Noe_Osorio-ff2bd6?labelColor=0a0e14)](https://noeosorio.com)
+![License](https://img.shields.io/badge/license-MIT-84cc16?style=for-the-badge&labelColor=18181b)
+![React](https://img.shields.io/badge/React-19-84cc16?style=for-the-badge&logo=react&logoColor=bef264&labelColor=18181b)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-84cc16?style=for-the-badge&logo=typescript&logoColor=bef264&labelColor=18181b)
+![Vite](https://img.shields.io/badge/Vite-8-84cc16?style=for-the-badge&logo=vite&logoColor=bef264&labelColor=18181b)
 
-[**Live demo**](https://simulations.noeosorio.com) &nbsp;·&nbsp;
-[**Phase 01 — Micro Ecosystem**](src/simulations/micro-ecosystem/README.md) &nbsp;·&nbsp;
-[**Phase 02 — Skill Ecosystem**](src/simulations/skill-ecosystem/README.md) &nbsp;·&nbsp;
-[**Phase 03 — Tribal Society**](src/simulations/tribal-society/README.md) &nbsp;·&nbsp;
-[**Phase 04 — Family Bonds**](src/simulations/family-bonds/README.md)
+[**Live demo**](https://simulations.noeosorio.com) · [Add a phase](docs/how-to-add-a-simulation.md) · [Report a bug](../../issues)
 
 </div>
 
----
+**Sim World** is a single-page app that hosts a growing series of **self-contained simulations**, each one modelling a _phase_ in the history of organic life. Every phase adds one new pressure (scarce food, interdependence, family) and ships as its own folder that plugs into the shell through a single registry entry. No backend: runs, logs and saves live entirely in the browser.
 
-## ▌ What is this?
+<sub>[Features](#-features) · [Demo](#️-demo) · [Quickstart](#-quickstart) · [Configuration](#️-configuration) · [Architecture](#️-architecture) · [Structure](#-structure) · [Roadmap](#️-roadmap) · [License](#-license)</sub>
 
-**Sim World** is a single-page app that hosts a growing series of **self-contained simulations**, each one modelling a _phase_ in the history of organic life. Start with single-cell creatures in a primordial soup, end somewhere far stranger. Every phase ships as its own folder and plugs into the shell through one registry entry.
+## ✨ Features
 
-The UI is a dark, Palantir-inspired HUD: neon cyan / magenta / amber accents, mono-typography, corner brackets, and a faint grid backdrop.
+| # | Phase | What it models |
+|---|-------|----------------|
+| 01 | 🧬 [**Micro Ecosystem**](src/simulations/micro-ecosystem/README.md) | Tiny creatures wander, eat, mate when they have enough energy, and die when they run out. |
+| 02 | 🛠️ [**Skill Ecosystem**](src/simulations/skill-ecosystem/README.md) | Food stops being free. Farmers, harvesters, healers and builders with inheritable, mutating skills. |
+| 03 | 🏘️ [**Tribal Society**](src/simulations/tribal-society/README.md) | Nobody is self-sufficient. Five interdependent roles, life stages, teachers and old age. |
+| 04 | 🏠 [**Family Bonds**](src/simulations/family-bonds/README.md) | Inheritable personalities, lifelong partners, family houses and pantries, schools and barter. |
 
-```text
-phase 01 ──●───● phase 02 ──●───● phase 03 ──●───● phase 04 ──◌───◌ phase 05 (coming soon)
-```
+Across every phase:
 
----
+- **Save and reload runs** as plain-text files (`#` header + versioned JSON), straight from the browser.
+- **Export event logs**: births, deaths, food and every other event, timestamped.
+- **Speed controls and fullscreen viewer** on top of a high-FPS canvas loop.
+- **Static-host friendly**: `HashRouter` means the build works from `file://` or any static host with no rewrites.
 
-## ▌ Phases
+## 🖼️ Demo
 
-| # | Phase | What it models | Status |
-|---|-------|----------------|--------|
-| **01** | [**Micro Ecosystem**](src/simulations/micro-ecosystem/) | Tiny creatures wander, eat, and reproduce. First spark of organic life. | ![available](https://img.shields.io/badge/-available-00e5ff?labelColor=0a0e14) |
-| **02** | [**Skill Ecosystem**](src/simulations/skill-ecosystem/) | Four roles — farmer, harvester, healer, builder — with inheritable skills. | ![available](https://img.shields.io/badge/-available-a8ff2b?labelColor=0a0e14) |
-| **03** | [**Tribal Society**](src/simulations/tribal-society/) | Nobody is self-sufficient. Ages, teachers, and role-learning. | ![available](https://img.shields.io/badge/-available-ff2bd6?labelColor=0a0e14) |
-| **04** | [**Family Bonds**](src/simulations/family-bonds/) | Personalities, courtship, monogamy, family inventories, schools. | ![available](https://img.shields.io/badge/-available-ffb020?labelColor=0a0e14) |
-| **05** | Coming soon | The next pressure. | ![planned](https://img.shields.io/badge/-planned-6b7d93?labelColor=0a0e14) |
+<div align="center">
 
-> Each simulation folder contains a plain-English `README.md` describing what that phase models.
+[![Sim World preview](public/og-image.png)](https://simulations.noeosorio.com)
 
----
+</div>
 
-## ▌ Quick start
+<!-- TODO: add docs/demo.gif showing a Family Bonds run -->
+
+Try it live at **[simulations.noeosorio.com](https://simulations.noeosorio.com)**.
+
+## 🚀 Quickstart
+
+**Requirements:** Node >= 20.19 (or >= 22.12 on the 22.x line), as required by Vite 8, and npm.
 
 ```bash
-# clone
-git clone git@github.com:NoeOsorio/simulations.git
+git clone https://github.com/NoeOsorio/simulations.git
 cd simulations
-
-# run
 npm install
 npm run dev          # http://localhost:5173
 ```
 
-Production build:
+> [!NOTE]
+> The dev server runs React StrictMode and is noticeably slower than production. Use `npm run build && npm run preview` to judge real performance.
 
-```bash
-npm run build        # tsc -b && vite build
-npm run preview      # serve the production build
-```
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the Vite dev server with HMR |
+| `npm run build` | Type-check (`tsc -b`) and build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
 
-Lint:
+There is no test runner configured yet; `npm run build` is the type-safety gate.
 
-```bash
-npm run lint
-```
+## ⚙️ Configuration
 
----
-
-## ▌ Tech stack
-
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Framework | **React 19** | Fine-grained control over refs for high-FPS canvas loops. |
-| Build | **Vite 8** | Instant HMR, static build, hash-router friendly. |
-| Language | **TypeScript 6** | Strict types across shared registry and persistence. |
-| Routing | **React Router 7** (`HashRouter`) | Works from `file://` and any static host — no server rewrites. |
-| Rendering | **HTML5 Canvas** | Each simulation picks its own (canvas / SVG / DOM); canvas for the current phases. |
-| Persistence | **Plain text files** | No backend. Saves and logs download straight from the browser. |
-
----
-
-## ▌ Project structure
-
-```
-simulations/
-├── public/
-│   ├── logo.png                    ← Sim World icon (this repo)
-│   ├── og-image.png                ← social-share image
-│   └── site.webmanifest            ← PWA manifest
-├── src/
-│   ├── App.tsx                     ← shell + top-nav + router
-│   ├── index.css                   ← Palantir HUD design tokens
-│   ├── components/
-│   │   └── MainMenu.tsx            ← landing page with phase cards
-│   ├── lib/
-│   │   └── persistence.ts          ← shared text-file save/load
-│   └── simulations/
-│       ├── registry.ts             ← list of all simulations (drives the menu)
-│       ├── micro-ecosystem/        ← Phase 01
-│       ├── skill-ecosystem/        ← Phase 02
-│       └── tribal-society/         ← Phase 03
-├── index.html                      ← SEO, OG, Twitter Card, JSON-LD
-├── CLAUDE.md                       ← repo rules (frozen phases, etc.)
-└── README.md                       ← you are here
-```
-
----
-
-## ▌ Persistence — logs & state
-
-Every simulation can emit two kinds of plain-text files (downloaded straight from the browser):
-
-1. **Event logs** — `sim-<phase>-logs-YYYYMMDD-HHMMSS.txt`
-   A timestamped list of every event in the run (births, deaths, food rains, etc.).
-
-2. **Saved state** — `sim-<phase>-state-YYYYMMDD-HHMMSS.txt`
-   A `#`-commented header followed by a JSON snapshot. Re-loadable from the same simulation page via **Load state**.
-
-Shared helpers live in [`src/lib/persistence.ts`](src/lib/persistence.ts):
-
-- `downloadText(filename, content)` — trigger a file download
-- `pickTextFile()` — open the system picker and return the file's text
-- `logsToText(header, entries)` — format an event log as text
-- `stateToText(label, state)` / `parseStateText(text)` — round-trip simulation state
-
-Saved-state files are versioned (`version: 1`); simulations reject older versions so the format can evolve safely.
+No environment variables or services are needed. Everything runs client-side.
 
 <details>
-<summary>Example saved-state file</summary>
+<summary>Save and log file format</summary>
+
+Each simulation downloads two kinds of plain-text files:
+
+1. **Event logs**: `sim-<phase>-logs-YYYYMMDD-HHMMSS.txt`, one timestamped event per line.
+2. **Saved state**: `sim-<phase>-state-YYYYMMDD-HHMMSS.txt`, a `#`-commented header followed by a JSON snapshot, reloadable via **Load state** on the same simulation page.
+
+Saved-state files are versioned (`version: 1`) and simulations reject other versions, so the format can evolve safely.
 
 ```text
 # sim-world state · micro-ecosystem · 2026-04-23T01:42:11.039Z
@@ -150,23 +103,37 @@ Saved-state files are versioned (`version: 1`); simulations reject older version
 }
 ```
 
+Helpers live in [`src/lib/persistence.ts`](src/lib/persistence.ts): `downloadText`, `pickTextFile`, `logsToText`, `stateToText` / `parseStateText`.
+
 </details>
 
----
+## 🏗️ Architecture
 
-## ▌ Adding a new phase
+A single registry drives both the main menu and the router, so adding a phase never touches routing code.
 
-1. Create `src/simulations/<my-phase>/` with at minimum:
-   - `README.md` — short, plain-English description.
-   - A React component that renders the simulation.
+```mermaid
+flowchart LR
+    R["simulations/registry.ts<br/>SimulationMeta[]"] --> M["MainMenu<br/>phase cards"]
+    R --> A["App.tsx<br/>HashRouter routes"]
+    A --> V["SimulationViewer<br/>fullscreen shell"]
+    V --> P["Phase component<br/>canvas + rAF loop"]
+    P --> L["lib/persistence.ts<br/>save / load / logs"]
+    P --> S["lib/sim-render<br/>shared sprites (P4+)"]
+```
 
-2. Append a `SimulationMeta` entry in [`src/simulations/registry.ts`](src/simulations/registry.ts):
+Each phase keeps per-frame state in refs, pre-renders static backdrops to an offscreen canvas, and only pushes throttled stats into React state.
+
+<details>
+<summary>Adding a new phase</summary>
+
+1. Create `src/simulations/<phase-id>/` with a default-exported `<Phase>.tsx` and a plain-English `README.md`.
+2. Append a `SimulationMeta` entry to [`src/simulations/registry.ts`](src/simulations/registry.ts):
 
    ```ts
    {
      id: 'my-phase',
-     phase: 4,
-     title: 'Phase 4 — My Phase',
+     phase: 5,
+     title: 'Phase 5 — My Phase',
      shortTitle: 'My Phase',
      tagline: 'One-line hook.',
      description: 'A few sentences for the menu card.',
@@ -177,55 +144,62 @@ Saved-state files are versioned (`version: 1`); simulations reject older version
    }
    ```
 
-3. Done — the card and route appear automatically.
+3. The menu card and route appear automatically.
 
-> ⚠️ **Frozen phases.** Once a phase ships, its files are frozen. See [`CLAUDE.md`](CLAUDE.md) for the exact rules on what you can and can't touch.
+> [!WARNING]
+> **Shipped phases are frozen.** When building a new phase, never edit earlier phases' files; duplicate what you need instead. See [`CLAUDE.md`](CLAUDE.md) and the full checklist in [`docs/how-to-add-a-simulation.md`](docs/how-to-add-a-simulation.md).
 
----
+</details>
 
-## ▌ Design system
+## 📁 Structure
 
-- **Palantir HUD** — deep void background, cyan / magenta / amber / lime neon accents, JetBrains Mono for tabular data, Inter for prose.
-- **Corner brackets** (`.brackets`) frame any `.hud` panel.
-- **`.hud`** and **`.hud--solid`** are the two panel primitives — translucent over the grid or fully opaque.
-- **`.btn`** comes in `--primary`, `--magenta`, `--ghost`, and `--danger` variants.
-- **`.chip`** for status tags (`--cyan`, `--magenta`, `--amber`, `--lime`, `--muted`).
-- No text-decoration underlines anywhere — hover cues are color, glow, and transform.
+<details>
+<summary>View structure</summary>
 
-Tokens live on `:root` in [`src/index.css`](src/index.css).
+```text
+simulations/
+├── docs/
+│   └── how-to-add-a-simulation.md   # checklist for new phases
+├── public/                          # logo, favicons, og-image, PWA manifest
+├── src/
+│   ├── App.tsx                      # shell: top nav + hash router
+│   ├── components/
+│   │   ├── MainMenu.tsx             # landing page with phase cards
+│   │   └── SimulationViewer.tsx     # fullscreen-capable viewer
+│   ├── lib/
+│   │   ├── persistence.ts           # shared text-file save/load
+│   │   ├── sim-math.ts, sim-names.ts, sim-types.ts
+│   │   └── sim-render/              # shared canvas sprites (P4+)
+│   ├── styles/                      # HUD design tokens and layout
+│   └── simulations/
+│       ├── registry.ts              # drives menu + routes
+│       ├── micro-ecosystem/         # Phase 01
+│       ├── skill-ecosystem/         # Phase 02
+│       ├── tribal-society/          # Phase 03
+│       └── family-bonds/            # Phase 04
+├── index.html                       # SEO, Open Graph, JSON-LD
+└── CLAUDE.md                        # repo rules (frozen phases, conventions)
+```
 
----
+</details>
 
-## ▌ Roadmap
+## 🗺️ Roadmap
 
 - [x] Phase 01 — Micro Ecosystem
 - [x] Phase 02 — Skill Ecosystem
 - [x] Phase 03 — Tribal Society
-- [ ] Phase 04 — Predator & Prey
-- [ ] Phase 05 — Language & Myth
-- [ ] Phase 06 — City-State
-- [ ] Phase N — …
+- [x] Phase 04 — Family Bonds
+- [ ] Phase 05 — coming soon
+- [ ] Test runner and CI
+
+## 📄 License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE).
 
 ---
 
-## ▌ Author
-
 <div align="center">
 
-**Noe Osorio** — Software Engineer
+Made with ☕ by [Noé Osorio](https://noeosorio.com) · [business@noeosorio.com](mailto:business@noeosorio.com)
 
-[![Website](https://img.shields.io/badge/Website-noeosorio.com-00e5ff?labelColor=0a0e14)](https://noeosorio.com)
-[![Email](https://img.shields.io/badge/Email-business@noeosorio.com-ff2bd6?labelColor=0a0e14)](mailto:business@noeosorio.com)
-[![GitHub](https://img.shields.io/badge/GitHub-NoeOsorio-ffffff?logo=github&labelColor=0a0e14)](https://github.com/NoeOsorio)
-
-</div>
-
----
-
-## ▌ License
-
-Released under the [MIT License](LICENSE). Free to fork, remix, and build new phases on top of.
-
-<div align="center">
-<sub>Built with neon ◆ by <a href="https://noeosorio.com">Noe Osorio</a></sub>
 </div>
